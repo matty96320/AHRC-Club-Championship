@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AHRC Championship - Admin Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .modal-backdrop { background-color: rgba(0,0,0,0.5); }
+        .modal { transition: opacity 0.3s ease; }
+    </style>
+</head>
+<body class="bg-gray-200 text-gray-800">
+
+    <!-- Paste the same firebaseConfig from your main app here -->
+    <script>
+      const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_AUTH_DOMAIN",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_STORAGE_BUCKET",
+        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+        appId: "YOUR_APP_ID"
+      };
+    </script>
+
+    <!-- Login View -->
+    <div id="login-view" class="min-h-screen flex items-center justify-center">
+        <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-sm">
+            <h2 class="text-2xl font-bold text-center mb-6">Admin Login</h2>
+            <form id="login-form">
+                <div class="mb-4">
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                    <input type="email" id="email" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                <div class="mb-6">
+                    <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                    <input type="password" id="password" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition">Log In</button>
+            </form>
+            <p id="login-error" class="text-red-500 text-sm mt-4 text-center"></p>
+        </div>
+    </div>
+
+    <!-- Admin Panel View (hidden by default) -->
+    <div id="admin-view" class="hidden container mx-auto p-4 md:p-8">
+        <header class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">Admin Control Panel</h1>
+            <button id="logout-button" class="bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700 transition">Log Out</button>
+        </header>
+
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <div class="flex items-center mb-4">
+                <label for="yearSelectorAdmin" class="text-sm font-medium mr-2">Select Season:</label>
+                <select id="yearSelectorAdmin" class="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></select>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white border">
+                    <thead class="bg-gray-200">
+                        <tr>
+                            <th class="py-3 px-4 border-b text-left">Athlete</th>
+                            <th class="py-3 px-4 border-b text-left">Time</th>
+                            <th class="py-3 px-4 border-b text-left">Date</th>
+                            <th class="py-3 px-4 border-b text-left">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminResultsBody">
+                        <!-- Rows will be populated by JS -->
+                    </tbody>
+                </table>
+                 <p id="admin-no-results" class="text-center text-gray-500 py-8 hidden">No entries found for this season.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal (hidden by default) -->
+    <div id="edit-modal" class="fixed inset-0 z-50 overflow-y-auto hidden modal-backdrop flex items-center justify-center">
+        <div class="bg-white rounded-lg shadow-xl p-8 m-4 max-w-xl w-full">
+            <h2 class="text-2xl font-semibold mb-4">Edit Entry</h2>
+            <form id="edit-form" class="space-y-4">
+                <input type="hidden" id="edit-doc-id">
+                <div>
+                    <label for="edit-fullName" class="block text-sm font-medium text-gray-700">Full Name</label>
+                    <input type="text" id="edit-fullName" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div>
+                    <label for="edit-dob" class="block text-sm font-medium text-gray-700">Date of Birth</label>
+                    <input type="date" id="edit-dob" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div>
+                    <label for="edit-gender" class="block text-sm font-medium text-gray-700">Gender</label>
+                    <select id="edit-gender" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="edit-parkrunDate" class="block text-sm font-medium text-gray-700">Date of Parkrun</label>
+                    <input type="date" id="edit-parkrunDate" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div>
+                    <label for="edit-parkrunTime" class="block text-sm font-medium text-gray-700">Parkrun Time (MM:SS)</label>
+                    <input type="text" id="edit-parkrunTime" placeholder="e.g., 21:35" required pattern="\d{1,2}:\d{2}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div class="flex justify-end space-x-4 pt-4">
+                    <button type="button" id="cancel-edit" class="bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-400">Cancel</button>
+                    <button type="submit" class="bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, onSnapshot, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Views
+        const loginView = document.getElementById('login-view');
+        const adminView = document.getElementById('admin-view');
+        const editModal = document.getElementById('edit-modal');
+
+        // Forms and Buttons
+        const loginForm = document.getElementById('login-form');
+        const logoutButton = document.getElementById('logout-button');
+        const editForm = document.getElementById('edit-form');
+        const cancelEditButton = document.getElementById('cancel-edit');
+        
+        // Data Display
+        const yearSelector = document.getElementById('yearSelectorAdmin');
+        const resultsBody = document.getElementById('adminResultsBody');
+        const noResultsMsg = document.getElementById('admin-no-results');
+        
+        let currentUnsubscribe;
+        let selectedYearForEditing;
+
+        // --- Auth Handling ---
+        onAuthStateChanged(auth, user => {
+            if (user) {
+                loginView.classList.add('hidden');
+                adminView.classList.remove('hidden');
+                initializeAdminPanel();
+            } else {
+                adminView.classList.add('hidden');
+                loginView.classList.remove('hidden');
+                if (currentUnsubscribe) currentUnsubscribe();
+            }
+        });
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const loginError = document.getElementById('login-error');
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                loginError.textContent = '';
+            } catch (error) {
+                loginError.textContent = 'Invalid email or password.';
+                console.error("Login failed:", error);
+            }
+        });
+
+        logoutButton.addEventListener('click', () => signOut(auth));
+
+        // --- Admin Panel Logic ---
+        const getChampionshipYearString = (date) => {
+            const year = date.getFullYear();
+            const month = date.getMonth();
+            return month >= 10 ? `${year}-${year + 1}` : `${year - 1}-${year}`;
+        };
+        const timeToSeconds = (timeStr) => {
+            const [minutes, seconds] = timeStr.split(':').map(Number);
+            return (minutes * 60) + (seconds || 0);
+        };
+        const calculateAgeCategory = (dobString, parkrunDateString) => {
+             const dob = new Date(dobString);
+            const parkrunDate = new Date(parkrunDateString);
+            let age = parkrunDate.getFullYear() - dob.getFullYear();
+            const m = parkrunDate.getMonth() - dob.getMonth();
+            if (m < 0 || (m === 0 && parkrunDate.getDate() < dob.getDate())) age--;
+            if (age < 18) return 'Under 18';
+            if (age >= 18 && age < 30) return '18-29';
+            if (age >= 30 && age < 40) return '30-39';
+            if (age >= 40 && age < 50) return '40-49';
+            if (age >= 50 && age < 60) return '50-59';
+            if (age >= 60 && age < 70) return '60-69';
+            return '70+';
+        };
+
+        function listenToYearData(yearString) {
+            if (currentUnsubscribe) currentUnsubscribe();
+            selectedYearForEditing = yearString;
+            const athletesCollectionRef = collection(db, `championships/${yearString}/athletes`);
+            currentUnsubscribe = onSnapshot(athletesCollectionRef, (snapshot) => {
+                const athletes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                athletes.sort((a,b) => a.time_seconds - b.time_seconds);
+                renderAdminTable(athletes);
+            });
+        }
+        
+        function renderAdminTable(athletes) {
+            resultsBody.innerHTML = '';
+            noResultsMsg.classList.toggle('hidden', athletes.length > 0);
+            athletes.forEach(athlete => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="py-3 px-4 border-b">${athlete.name}</td>
+                    <td class="py-3 px-4 border-b font-semibold">${athlete.fastest_time}</td>
+                    <td class="py-3 px-4 border-b">${new Date(athlete.date_of_time).toLocaleDateString()}</td>
+                    <td class="py-3 px-4 border-b space-x-2">
+                        <button data-id="${athlete.id}" class="edit-btn bg-yellow-500 text-white text-sm font-bold py-1 px-3 rounded hover:bg-yellow-600">Edit</button>
+                        <button data-id="${athlete.id}" data-name="${athlete.name}" class="delete-btn bg-red-500 text-white text-sm font-bold py-1 px-3 rounded hover:bg-red-600">Delete</button>
+                    </td>
+                `;
+                resultsBody.appendChild(row);
+            });
+        }
+        
+        resultsBody.addEventListener('click', async (e) => {
+            const docId = e.target.dataset.id;
+            if (!docId) return;
+
+            if (e.target.classList.contains('delete-btn')) {
+                const athleteName = e.target.dataset.name;
+                if (confirm(`Are you sure you want to delete the entry for ${athleteName}?`)) {
+                    try {
+                        await deleteDoc(doc(db, `championships/${selectedYearForEditing}/athletes`, docId));
+                    } catch (error) {
+                        console.error("Delete failed:", error);
+                        alert("Could not delete entry.");
+                    }
+                }
+            }
+
+            if (e.target.classList.contains('edit-btn')) {
+                const row = e.target.closest('tr');
+                const athleteData = {
+                    id: docId,
+                    name: row.cells[0].textContent,
+                    time: row.cells[1].textContent,
+                    date: row.cells[2].textContent
+                };
+                
+                // We need the full data object to populate the form
+                const docRef = doc(db, `championships/${selectedYearForEditing}/athletes`, docId);
+                const docSnap = await getDoc(docRef); // You need to import getDoc
+                if (docSnap.exists()){
+                     openEditModal(docSnap.data(), docId);
+                }
+            }
+        });
+
+        function openEditModal(data, docId) {
+            document.getElementById('edit-doc-id').value = docId;
+            document.getElementById('edit-fullName').value = data.name;
+            document.getElementById('edit-dob').value = data.dob;
+            document.getElementById('edit-gender').value = data.gender;
+            document.getElementById('edit-parkrunDate').value = data.date_of_time;
+            document.getElementById('edit-parkrunTime').value = data.fastest_time;
+            editModal.classList.remove('hidden');
+        }
+
+        cancelEditButton.addEventListener('click', () => editModal.classList.add('hidden'));
+
+        editForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const docId = document.getElementById('edit-doc-id').value;
+            const dob = document.getElementById('edit-dob').value;
+            const parkrunDate = document.getElementById('edit-parkrunDate').value;
+            const parkrunTime = document.getElementById('edit-parkrunTime').value;
+
+            const updatedData = {
+                name: document.getElementById('edit-fullName').value,
+                dob: dob,
+                gender: document.getElementById('edit-gender').value,
+                date_of_time: parkrunDate,
+                fastest_time: parkrunTime,
+                time_seconds: timeToSeconds(parkrunTime),
+                age_category: calculateAgeCategory(dob, parkrunDate)
+            };
+            
+            try {
+                const docRef = doc(db, `championships/${selectedYearForEditing}/athletes`, docId);
+                await updateDoc(docRef, updatedData);
+                editModal.classList.add('hidden');
+            } catch(error) {
+                console.error("Update failed:", error);
+                alert("Could not save changes.");
+            }
+        });
+
+        function initializeAdminPanel() {
+            const metadataRef = doc(db, "championships", "_metadata");
+            onSnapshot(metadataRef, (docSnap) => {
+                const currentSeason = getChampionshipYearString(new Date());
+                let years = [];
+                if (docSnap.exists()) years = docSnap.data().availableYears || [];
+                if (!years.includes(currentSeason)) years.push(currentSeason);
+                years.sort().reverse();
+                
+                yearSelector.innerHTML = '';
+                years.forEach(yearString => {
+                    const option = document.createElement('option');
+                    option.value = yearString;
+                    option.textContent = yearString.replace('-', '/');
+                    yearSelector.appendChild(option);
+                });
+
+                yearSelector.value = currentSeason;
+                listenToYearData(currentSeason);
+            });
+
+            yearSelector.addEventListener('change', () => listenToYearData(yearSelector.value));
+        }
+        
+    </script>
+</body>
+</html>
+
+2. New Firebase Security Rules
+To make the admin panel work, you need to update your Firestore security rules. This is the most important step. The new rules separate permissions for creating, editing, and deleting data.
+Instructions:
+ * Go to your Firebase Project > Firestore Database > Rules tab.
+ * Delete everything in the editor and replace it with the code below.
+ * Crucially, change 'admin@yourclub.com' to the email address you will use for your admin login.
+ * Click Publish.
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+  
+    // Rule for the metadata document that stores the list of years
+    match /championships/_metadata {
+      // Anyone can read the list of years to populate the dropdown
+      allow read: if true;
+      // Any authenticated user can add a new year to the list
+      allow write: if request.auth != null;
+    }
+  
+    // Rules for individual athlete entries in any given year
+    match /championships/{year}/athletes/{athleteId} {
+      // Anyone can read the championship results
+      allow read: if true;
+      
+      // Anyone can CREATE a new entry (for self-reporting)
+      allow create: if request.auth != null;
+      
+      // ONLY the designated admin can UPDATE or DELETE entries
+      allow update, delete: if request.auth.email == 'admin@yourclub.com';
+    }
+  }
+}
+
