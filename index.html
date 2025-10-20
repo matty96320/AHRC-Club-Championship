@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -17,422 +18,493 @@
 </head>
 <body class="bg-gray-100 text-gray-800">
 
-    <div class="container mx-auto p-4 md:p-8">
-        <header class="bg-white shadow-md rounded-lg p-6 mb-8 text-center">
-            
-            <h1 class="text-3xl font-bold text-blue-800">Ashington Hurst Running Club</h1>
-            <p class="text-xl text-gray-600">Self-Reporting Parkrun Championship</p>
-        </header>
+```
+<div class="container mx-auto p-4 md:p-8">
+    <header class="bg-white shadow-md rounded-lg p-6 mb-8 text-center">
+        <h1 class="text-3xl font-bold text-blue-800">Ashington Hurst Running Club</h1>
+        <p class="text-xl text-gray-600">Self-Reporting Parkrun Championship</p>
+    </header>
 
-        <main class="space-y-8">
-            
-            <div class="bg-white shadow-md rounded-lg overflow-hidden">
-                <nav class="flex border-b border-gray-200">
-                    <button id="tab-form-btn" data-tab="form" class="tab-btn-nav px-6 py-3 font-semibold text-blue-600 border-b-2 border-blue-600">
-                        Submit Your Time
-                    </button>
-                    <button id="tab-results-btn" data-tab="results" class="tab-btn-nav px-6 py-3 font-semibold text-gray-500 hover:text-gray-700">
-                        Championship Standings
-                    </button>
-                </nav>
-            </div>
-
-            <div id="tab-pane-form" class="tab-pane bg-white shadow-md rounded-lg p-6 h-fit">
-                <h2 class="text-2xl font-semibold mb-4 border-b pb-2">Submit Your Time</h2>
-                <form id="timeSubmissionForm" class="space-y-4">
-                    <div>
-                        <label for="fullName" class="block text-sm font-medium text-gray-700">Full Name</label>
-                        <input type="text" id="fullName" name="fullName" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                    </div>
-                    <div>
-                        <label for="dob" class="block text-sm font-medium text-gray-700">Date of Birth</label>
-                        <input type="date" id="dob" name="dob" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                    </div>
-                    <div>
-                        <label for="gender" class="block text-sm font-medium text-gray-700">Gender</label>
-                        <select id="gender" name="gender" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="parkrunDate" class="block text-sm font-medium text-gray-700">Date of Parkrun</label>
-                        <input type="date" id="parkrunDate" name="parkrunDate" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                    </div>
-                    <div>
-                        <label for="parkrunTime" class="block text-sm font-medium text-gray-700">Parkrun Time (MM:SS)</label>
-                        <input type="text" id="parkrunTime" name="parkrunTime" placeholder="e.g., 21:35" required pattern="\d{1,2}:\d{2}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                    </div>
-                    <div>
-                        <label for="parkrunLocation" class="block text-sm font-medium text-gray-700">Parkrun Location</label>
-                        <input type="text" id="parkrunLocation" name="parkrunLocation" placeholder="e.g., Horsham, Worthing" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                    </div>
-                    <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300 shadow-md disabled:bg-gray-400" disabled>Connecting...</button>
-                </form>
-                <div id="feedbackMessage" class="feedback"></div>
-            </div>
-
-            <div id="tab-pane-results" class="tab-pane bg-white shadow-md rounded-lg p-6 hidden">
-                <div class="flex flex-wrap justify-between items-center mb-4">
-                     <h2 id="championshipHeader" class="text-2xl font-semibold">Championship Standings</h2>
-                     <div>
-                        <label for="yearSelector" class="text-sm font-medium mr-2">Season:</label>
-                        <select id="yearSelector" class="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></select>
-                     </div>
-                </div>
-               
-                <div id="loading" class="text-center py-8">
-                    <p class="text-gray-600">Loading championship data...</p>
-                </div>
-
-                <div id="resultsContent" class="hidden">
-                    <div class="flex flex-wrap gap-2 mb-4">
-                        <button data-filter="all" class="filter-btn bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition">All</button>
-                        <button data-filter="male" class="filter-btn bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition">Male</button>
-                        <button data-filter="female" class="filter-btn bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition">Female</button>
-                    </div>
-                    <div id="age-category-filters" class="flex flex-wrap gap-2 mb-4 hidden"></div>
-                    <button id="exportCsv" class="mb-4 bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 transition duration-300 shadow-md">Export to CSV</button>
-
-                    <div class="table-responsive">
-                        <table class="min-w-full bg-white border">
-                            <thead class="bg-gray-200">
-                                <tr>
-                                    <th class="py-3 px-4 border-b text-left">Rank</th>
-                                    <th class="py-3 px-4 border-b text-left">Athlete</th>
-                                    <th class="py-3 px-4 border-b text-left">Fastest Time</th>
-                                    <th class="py-3 px-4 border-b text-left">Date</th>
-                                    <th class="py-3 px-4 border-b text-left">Location</th>
-                                    <th class="py-3 px-4 border-b text-left">Gender</th>
-                                    <th class="py-3 px-4 border-b text-left">Age Category</th>
-                                </tr>
-                            </thead>
-                            <tbody id="resultsBody"></tbody>
-                        </table>
-                    </div>
-                    <p id="no-results" class="text-center text-gray-500 py-8 hidden">No results match the current filters.</p>
-                </div>
-            </div>
-        </main>
+    <main class="space-y-8">
         
-        <footer class="text-center mt-8 text-sm text-gray-500">
-            <p>&copy; 2025 Ashington Hurst Running Club Championship Tracker</p>
-        </footer>
-    </div>
+        <div class="bg-white shadow-md rounded-lg overflow-hidden">
+            <nav class="flex border-b border-gray-200">
+                <button id="tab-form-btn" data-tab="form" class="tab-btn-nav px-6 py-3 font-semibold text-blue-600 border-b-2 border-blue-600">
+                    Submit Your Time
+                </button>
+                <button id="tab-results-btn" data-tab="results" class="tab-btn-nav px-6 py-3 font-semibold text-gray-500 hover:text-gray-700">
+                    Championship Standings
+                </button>
+            </nav>
+        </div>
+
+        <div id="tab-pane-form" class="tab-pane bg-white shadow-md rounded-lg p-6 h-fit">
+            <h2 class="text-2xl font-semibold mb-4 border-b pb-2">Submit Your Time</h2>
+            <form id="timeSubmissionForm" class="space-y-4">
+                <div>
+                    <label for="fullName" class="block text-sm font-medium text-gray-700">Full Name</label>
+                    <input type="text" id="fullName" name="fullName" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="dob" class="block text-sm font-medium text-gray-700">Date of Birth</label>
+                    <input type="date" id="dob" name="dob" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="gender" class="block text-sm font-medium text-gray-700">Gender</label>
+                    <select id="gender" name="gender" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="parkrunDate" class="block text-sm font-medium text-gray-700">Date of Parkrun</label>
+                    <input type="date" id="parkrunDate" name="parkrunDate" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="parkrunTime" class="block text-sm font-medium text-gray-700">Parkrun Time (MM:SS)</label>
+                    <input type="text" id="parkrunTime" name="parkrunTime" placeholder="e.g., 21:35" required pattern="\d{1,2}:\d{2}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="parkrunLocation" class="block text-sm font-medium text-gray-700">Parkrun Location</label>
+                    <input type="text" id="parkrunLocation" name="parkrunLocation" placeholder="e.g., Horsham, Worthing" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300 shadow-md disabled:bg-gray-400" disabled>Connecting...</button>
+            </form>
+            <div id="feedbackMessage" class="feedback"></div>
+        </div>
+
+        <div id="tab-pane-results" class="tab-pane bg-white shadow-md rounded-lg p-6 hidden">
+            <div class="flex flex-wrap justify-between items-center mb-4">
+                 <h2 id="championshipHeader" class="text-2xl font-semibold">Championship Standings</h2>
+                 <div>
+                    <label for="yearSelector" class="text-sm font-medium mr-2">Season:</label>
+                    <select id="yearSelector" class="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></select>
+                 </div>
+            </div>
+           
+            <div id="loading" class="text-center py-8">
+                <p class="text-gray-600">Loading championship data...</p>
+            </div>
+
+            <div id="resultsContent" class="hidden">
+                <div class="bg-gray-50 rounded-lg p-4 mb-4 border border-gray-200">
+                    <div class="flex flex-wrap items-center gap-4">
+                        <div class="flex-1 min-w-[200px]">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Gender</label>
+                            <div class="flex gap-2">
+                                <button data-filter="all" class="filter-btn bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition flex-1">All Athletes</button>
+                                <button data-filter="male" class="filter-btn bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition flex-1">Men</button>
+                                <button data-filter="female" class="filter-btn bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition flex-1">Women</button>
+                            </div>
+                        </div>
+                        <div class="flex-1 min-w-[200px]">
+                            <label for="ageCategorySelect" class="block text-sm font-medium text-gray-700 mb-2">Age Category</label>
+                            <select id="ageCategorySelect" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-2">
+                                <option value="all">All Ages</option>
+                            </select>
+                        </div>
+                        <div class="flex items-end gap-2">
+                            <button id="resetFilters" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition font-medium">
+                                Reset Filters
+                            </button>
+                        </div>
+                    </div>
+                    <div id="filterSummary" class="mt-3 text-sm text-gray-600 hidden">
+                        <span class="font-medium">Showing:</span> <span id="filterSummaryText"></span>
+                    </div>
+                </div>
+                <button id="exportCsv" class="mb-4 bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 transition duration-300 shadow-md">Export to CSV</button>
+
+                <div class="table-responsive">
+                    <table class="min-w-full bg-white border">
+                        <thead class="bg-gray-200">
+                            <tr>
+                                <th class="py-3 px-4 border-b text-left">Rank</th>
+                                <th class="py-3 px-4 border-b text-left">Athlete</th>
+                                <th class="py-3 px-4 border-b text-left">Fastest Time</th>
+                                <th class="py-3 px-4 border-b text-left">Date</th>
+                                <th class="py-3 px-4 border-b text-left">Location</th>
+                                <th class="py-3 px-4 border-b text-left">Gender</th>
+                                <th class="py-3 px-4 border-b text-left">Age Category</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultsBody"></tbody>
+                    </table>
+                </div>
+                <p id="no-results" class="text-center text-gray-500 py-8 hidden">No results match the current filters.</p>
+            </div>
+        </div>
+    </main>
     
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, getDoc, setDoc, onSnapshot, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    <footer class="text-center mt-8 text-sm text-gray-500">
+        <p>&copy; 2025 Ashington Hurst Running Club Championship Tracker</p>
+    </footer>
+</div>
 
-        // *** FIX: Moved the config object inside the module script ***
-        const manualFirebaseConfig = {
-          apiKey: "AIzaSyAYLeTA8morhqnq0p_YC-t5MW6LuE2MzfI",
-          authDomain: "ahrc-club-champs.firebaseapp.com",
-          projectId: "ahrc-club-champs",
-          storageBucket: "ahrc-club-champs.firebasestorage.app",
-          messagingSenderId: "275377232283",
-          appId: "1:275377232283:web:037a7615609012a61f293e"
-        };
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, collection, doc, getDoc, setDoc, onSnapshot, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const app = initializeApp(manualFirebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+    const manualFirebaseConfig = {
+      apiKey: "AIzaSyAYLeTA8morhqnq0p_YC-t5MW6LuE2MzfI",
+      authDomain: "ahrc-club-champs.firebaseapp.com",
+      projectId: "ahrc-club-champs",
+      storageBucket: "ahrc-club-champs.firebasestorage.app",
+      messagingSenderId: "275377232283",
+      appId: "1:275377232283:web:037a7615609012a61f293e"
+    };
 
-        const form = document.getElementById('timeSubmissionForm');
-        // *** FIX: Get reference to the submit button ***
-        const submitButton = form.querySelector('button[type="submit"]'); 
-        const feedbackMessage = document.getElementById('feedbackMessage');
-        
-        // *** NEW: Tab element references ***
-        const tabFormBtn = document.getElementById('tab-form-btn');
-        const tabResultsBtn = document.getElementById('tab-results-btn');
-        const tabFormPane = document.getElementById('tab-pane-form');
-        const tabResultsPane = document.getElementById('tab-pane-results');
+    const app = initializeApp(manualFirebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-        const loadingDiv = document.getElementById('loading');
-        const resultsContent = document.getElementById('resultsContent');
-        const resultsBody = document.getElementById('resultsBody');
-        const exportCsvButton = document.getElementById('exportCsv');
-        const filterButtons = document.querySelectorAll('.filter-btn');
-        const ageCategoryFiltersContainer = document.getElementById('age-category-filters');
-        const noResultsMessage = document.getElementById('no-results');
-        const yearSelector = document.getElementById('yearSelector');
-        const championshipHeader = document.getElementById('championshipHeader');
+    const form = document.getElementById('timeSubmissionForm');
+    const submitButton = form.querySelector('button[type="submit"]'); 
+    const feedbackMessage = document.getElementById('feedbackMessage');
+    
+    const tabFormBtn = document.getElementById('tab-form-btn');
+    const tabResultsBtn = document.getElementById('tab-results-btn');
+    const tabFormPane = document.getElementById('tab-pane-form');
+    const tabResultsPane = document.getElementById('tab-pane-results');
 
-        // *** NEW: Tab switching logic ***
-        const tabButtons = [tabFormBtn, tabResultsBtn];
-        const tabPanes = [tabFormPane, tabResultsPane];
+    const loadingDiv = document.getElementById('loading');
+    const resultsContent = document.getElementById('resultsContent');
+    const resultsBody = document.getElementById('resultsBody');
+    const exportCsvButton = document.getElementById('exportCsv');
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    const ageCategorySelect = document.getElementById('ageCategorySelect');
+    const resetFiltersBtn = document.getElementById('resetFilters');
+    const filterSummary = document.getElementById('filterSummary');
+    const filterSummaryText = document.getElementById('filterSummaryText');
+    const noResultsMessage = document.getElementById('no-results');
+    const yearSelector = document.getElementById('yearSelector');
+    const championshipHeader = document.getElementById('championshipHeader');
 
-        const setActiveTab = (tabName) => {
-            tabButtons.forEach(btn => {
-                if (btn.dataset.tab === tabName) {
-                    // Activate button
-                    btn.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
-                    btn.classList.remove('text-gray-500', 'hover:text-gray-700');
-                } else {
-                    // Deactivate button
-                    btn.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
-                    btn.classList.add('text-gray-500', 'hover:text-gray-700');
-                }
-            });
+    const tabButtons = [tabFormBtn, tabResultsBtn];
+    const tabPanes = [tabFormPane, tabResultsPane];
 
-            tabPanes.forEach(pane => {
-                if (pane.id === `tab-pane-${tabName}`) {
-                    // Show pane
-                    pane.classList.remove('hidden');
-                } else {
-                    // Hide pane
-                    pane.classList.add('hidden');
-                }
-            });
-        };
-
-        tabFormBtn.addEventListener('click', () => setActiveTab('form'));
-        tabResultsBtn.addEventListener('click', () => setActiveTab('results'));
-        // *** END NEW ***
-
-        let allAthleteData = [];
-        let displayedData = [];
-        let activeFilter = 'all';
-        let activeAgeCategory = 'all';
-        let selectedYear = '';
-        let unsubscribe;
-
-        const getChampionshipYearString = (date) => {
-            const year = date.getFullYear();
-            const month = date.getMonth(); // 0-indexed, Nov is 10
-            if (month >= 10) return `${year}-${year + 1}`;
-            return `${year - 1}-${year}`;
-        };
-
-        const timeToSeconds = (timeStr) => {
-            const [minutes, seconds] = timeStr.split(':').map(Number);
-            return (minutes * 60) + seconds;
-        };
-
-        const calculateAgeCategory = (dobString, parkrunDateString) => {
-            const dob = new Date(dobString);
-            const parkrunDate = new Date(parkrunDateString);
-            let age = parkrunDate.getFullYear() - dob.getFullYear();
-            const m = parkrunDate.getMonth() - dob.getMonth();
-            if (m < 0 || (m === 0 && parkrunDate.getDate() < dob.getDate())) age--;
-            if (age < 18) return 'Under 18';
-            if (age >= 18 && age < 30) return '18-29';
-            if (age >= 30 && age < 40) return '30-39';
-            if (age >= 40 && age < 50) return '40-49';
-            if (age >= 50 && age < 60) return '50-59';
-            if (age >= 60 && age < 70) return '60-69';
-            return '70+';
-        };
-
-        const showFeedback = (message, type, duration = 4000) => {
-            feedbackMessage.textContent = message;
-            feedbackMessage.className = `feedback ${type}`;
-            feedbackMessage.style.display = 'block';
-            setTimeout(() => { feedbackMessage.style.display = 'none'; }, duration);
-        };
-
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(form);
-            const parkrunDate = new Date(formData.get('parkrunDate'));
-            const submissionYear = getChampionshipYearString(parkrunDate);
-
-            const fullName = formData.get('fullName').trim();
-            const docId = fullName.toLowerCase().replace(/\s+/g, '-');
-            const newTimeSeconds = timeToSeconds(formData.get('parkrunTime'));
-            
-            const athletesCollectionRef = collection(db, `championships/${submissionYear}/athletes`);
-            const athleteDocRef = doc(athletesCollectionRef, docId);
-
-            try {
-                const docSnap = await getDoc(athleteDocRef);
-                if (docSnap.exists() && newTimeSeconds >= docSnap.data().time_seconds) {
-                    showFeedback('This is not faster than your current best for this season.', 'info');
-                    return;
-                }
-                
-                const dataToSave = {
-                    name: fullName,
-                    dob: formData.get('dob'),
-                    gender: formData.get('gender'),
-                    fastest_time: formData.get('parkrunTime'),
-                    time_seconds: newTimeSeconds,
-                    date_of_time: formData.get('parkrunDate'),
-                    age_category: calculateAgeCategory(formData.get('dob'), formData.get('parkrunDate')),
-                    location: formData.get('parkrunLocation').trim()
-                };
-                await setDoc(athleteDocRef, dataToSave);
-
-                const metadataRef = doc(db, "championships", "_metadata");
-                await setDoc(metadataRef, { availableYears: arrayUnion(submissionYear) }, { merge: true });
-
-                showFeedback(`Success! Time saved for ${submissionYear.replace('-', '/')} season.`, 'success');
-                form.reset();
-            } catch (error) {
-                console.error("Error writing document: ", error);
-                showFeedback('Could not save your time. Please try again.', 'error');
+    const setActiveTab = (tabName) => {
+        tabButtons.forEach(btn => {
+            if (btn.dataset.tab === tabName) {
+                btn.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
+                btn.classList.remove('text-gray-500', 'hover:text-gray-700');
+            } else {
+                btn.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
+                btn.classList.add('text-gray-500', 'hover:text-gray-700');
             }
         });
 
-        const applyFilters = () => {
-            let filteredData = allAthleteData;
-            if (activeFilter !== 'all') filteredData = filteredData.filter(a => a.gender.toLowerCase() === activeFilter);
-            if (activeAgeCategory !== 'all') filteredData = filteredData.filter(a => a.age_category === activeAgeCategory);
-            filteredData.sort((a, b) => a.time_seconds - b.time_seconds);
-            displayedData = filteredData;
-            renderTable();
-            updateAgeCategoryButtons();
-        };
-
-        const renderTable = () => {
-            resultsBody.innerHTML = '';
-            noResultsMessage.classList.toggle('hidden', displayedData.length > 0);
-            if (displayedData.length > 0) {
-                displayedData.forEach((athlete, index) => {
-                    const row = document.createElement('tr');
-                    row.className = 'hover:bg-gray-50';
-                    row.innerHTML = `
-                        <td class="py-3 px-4 border-b font-bold">${index + 1}</td>
-                        <td class="py-3 px-4 border-b font-medium">${athlete.name}</td>
-                        <td class="py-3 px-4 border-b font-semibold text-blue-700">${athlete.fastest_time}</td>
-                        <td class="py-3 px-4 border-b">${new Date(athlete.date_of_time).toLocaleDateString()}</td>
-                        <td class="py-3 px-4 border-b">${athlete.location || ''}</td>
-                        <td class="py-3 px-4 border-b">${athlete.gender}</td>
-                        <td class="py-3 px-4 border-b">${athlete.age_category}</td>
-                    `;
-                    resultsBody.appendChild(row);
-                });
+        tabPanes.forEach(pane => {
+            if (pane.id === `tab-pane-${tabName}`) {
+                pane.classList.remove('hidden');
+            } else {
+                pane.classList.add('hidden');
             }
-        };
+        });
+    };
+
+    tabFormBtn.addEventListener('click', () => setActiveTab('form'));
+    tabResultsBtn.addEventListener('click', () => setActiveTab('results'));
+
+    let allAthleteData = [];
+    let displayedData = [];
+    let activeFilter = 'all';
+    let activeAgeCategory = 'all';
+    let selectedYear = '';
+    let unsubscribe;
+
+    const getChampionshipYearString = (date) => {
+        const year = date.getFullYear();
+        const month = date.getMonth();
+        if (month >= 10) return `${year}-${year + 1}`;
+        return `${year - 1}-${year}`;
+    };
+
+    const timeToSeconds = (timeStr) => {
+        const [minutes, seconds] = timeStr.split(':').map(Number);
+        return (minutes * 60) + seconds;
+    };
+
+    const calculateAgeCategory = (dobString, parkrunDateString) => {
+        const dob = new Date(dobString);
+        const parkrunDate = new Date(parkrunDateString);
+        let age = parkrunDate.getFullYear() - dob.getFullYear();
+        const m = parkrunDate.getMonth() - dob.getMonth();
+        if (m < 0 || (m === 0 && parkrunDate.getDate() < dob.getDate())) age--;
+        if (age < 18) return 'Under 18';
+        if (age >= 18 && age < 30) return '18-29';
+        if (age >= 30 && age < 40) return '30-39';
+        if (age >= 40 && age < 50) return '40-49';
+        if (age >= 50 && age < 60) return '50-59';
+        if (age >= 60 && age < 70) return '60-69';
+        return '70+';
+    };
+
+    const showFeedback = (message, type, duration = 4000) => {
+        feedbackMessage.textContent = message;
+        feedbackMessage.className = `feedback ${type}`;
+        feedbackMessage.style.display = 'block';
+        setTimeout(() => { feedbackMessage.style.display = 'none'; }, duration);
+    };
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(form);
+        const parkrunDate = new Date(formData.get('parkrunDate'));
+        const submissionYear = getChampionshipYearString(parkrunDate);
+
+        const fullName = formData.get('fullName').trim();
+        const docId = fullName.toLowerCase().replace(/\s+/g, '-');
+        const newTimeSeconds = timeToSeconds(formData.get('parkrunTime'));
         
-        const updateAgeCategoryButtons = () => {
-            ageCategoryFiltersContainer.innerHTML = '';
-            if (activeFilter === 'all') {
-                ageCategoryFiltersContainer.classList.add('hidden');
+        const athletesCollectionRef = collection(db, `championships/${submissionYear}/athletes`);
+        const athleteDocRef = doc(athletesCollectionRef, docId);
+
+        try {
+            const docSnap = await getDoc(athleteDocRef);
+            if (docSnap.exists() && newTimeSeconds >= docSnap.data().time_seconds) {
+                showFeedback('This is not faster than your current best for this season.', 'info');
                 return;
             }
-            ageCategoryFiltersContainer.classList.remove('hidden');
-            const categories = [...new Set(allAthleteData.filter(a => a.gender.toLowerCase() === activeFilter).map(a => a.age_category))].sort();
-            const createButton = (text, category) => {
-                const btn = document.createElement('button');
-                btn.textContent = text;
-                btn.dataset.ageCategory = category;
-                btn.className = `age-filter-btn px-3 py-1.5 rounded-md text-sm transition ${activeAgeCategory === category ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`;
-                return btn;
+            
+            const dataToSave = {
+                name: fullName,
+                dob: formData.get('dob'),
+                gender: formData.get('gender'),
+                fastest_time: formData.get('parkrunTime'),
+                time_seconds: newTimeSeconds,
+                date_of_time: formData.get('parkrunDate'),
+                age_category: calculateAgeCategory(formData.get('dob'), formData.get('parkrunDate')),
+                location: formData.get('parkrunLocation').trim()
             };
-            ageCategoryFiltersContainer.appendChild(createButton(`All ${activeFilter === 'male' ? 'Men' : 'Women'}`, 'all'));
-            categories.forEach(cat => ageCategoryFiltersContainer.appendChild(createButton(cat, cat)));
-        };
+            await setDoc(athleteDocRef, dataToSave);
 
-        filterButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                filterButtons.forEach(btn => { btn.classList.replace('bg-blue-500', 'bg-gray-200'); btn.classList.replace('text-white', 'text-gray-700'); });
-                button.classList.replace('bg-gray-200', 'bg-blue-500'); button.classList.add('text-white');
-                activeFilter = button.dataset.filter; activeAgeCategory = 'all'; applyFilters();
+            const metadataRef = doc(db, "championships", "_metadata");
+            await setDoc(metadataRef, { availableYears: arrayUnion(submissionYear) }, { merge: true });
+
+            showFeedback(`Success! Time saved for ${submissionYear.replace('-', '/')} season.`, 'success');
+            form.reset();
+        } catch (error) {
+            console.error("Error writing document: ", error);
+            showFeedback('Could not save your time. Please try again.', 'error');
+        }
+    });
+
+    const applyFilters = () => {
+        let filteredData = allAthleteData;
+        if (activeFilter !== 'all') filteredData = filteredData.filter(a => a.gender.toLowerCase() === activeFilter);
+        if (activeAgeCategory !== 'all') filteredData = filteredData.filter(a => a.age_category === activeAgeCategory);
+        filteredData.sort((a, b) => a.time_seconds - b.time_seconds);
+        displayedData = filteredData;
+        renderTable();
+        updateAgeCategoryDropdown();
+        updateFilterSummary();
+    };
+
+    const updateFilterSummary = () => {
+        let summaryParts = [];
+        
+        if (activeFilter === 'male') summaryParts.push('Men');
+        else if (activeFilter === 'female') summaryParts.push('Women');
+        else summaryParts.push('All Athletes');
+        
+        if (activeAgeCategory !== 'all') {
+            summaryParts.push(activeAgeCategory);
+        }
+        
+        filterSummaryText.textContent = summaryParts.join(' • ');
+        
+        if (activeFilter !== 'all' || activeAgeCategory !== 'all') {
+            filterSummary.classList.remove('hidden');
+        } else {
+            filterSummary.classList.add('hidden');
+        }
+    };
+
+    const renderTable = () => {
+        resultsBody.innerHTML = '';
+        noResultsMessage.classList.toggle('hidden', displayedData.length > 0);
+        if (displayedData.length > 0) {
+            displayedData.forEach((athlete, index) => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="py-3 px-4 border-b font-bold">${index + 1}</td>
+                    <td class="py-3 px-4 border-b font-medium">${athlete.name}</td>
+                    <td class="py-3 px-4 border-b font-semibold text-blue-700">${athlete.fastest_time}</td>
+                    <td class="py-3 px-4 border-b">${new Date(athlete.date_of_time).toLocaleDateString()}</td>
+                    <td class="py-3 px-4 border-b">${athlete.location || ''}</td>
+                    <td class="py-3 px-4 border-b">${athlete.gender}</td>
+                    <td class="py-3 px-4 border-b">${athlete.age_category}</td>
+                `;
+                resultsBody.appendChild(row);
             });
-        });
-
-        ageCategoryFiltersContainer.addEventListener('click', (e) => {
-            if (e.target.classList.contains('age-filter-btn')) { activeAgeCategory = e.target.dataset.ageCategory; applyFilters(); }
+        }
+    };
+    
+    const updateAgeCategoryDropdown = () => {
+        const previousValue = ageCategorySelect.value;
+        ageCategorySelect.innerHTML = '<option value="all">All Ages</option>';
+        
+        if (activeFilter === 'all') {
+            ageCategorySelect.disabled = true;
+            ageCategorySelect.classList.add('bg-gray-100', 'cursor-not-allowed');
+            return;
+        }
+        
+        ageCategorySelect.disabled = false;
+        ageCategorySelect.classList.remove('bg-gray-100', 'cursor-not-allowed');
+        
+        const categories = [...new Set(allAthleteData
+            .filter(a => a.gender.toLowerCase() === activeFilter)
+            .map(a => a.age_category))].sort();
+        
+        categories.forEach(cat => {
+            const option = document.createElement('option');
+            option.value = cat;
+            option.textContent = cat;
+            ageCategorySelect.appendChild(option);
         });
         
-        exportCsvButton.addEventListener('click', () => {
-            if (displayedData.length === 0) { showFeedback('No data to export.', 'info', 2000); return; }
-            const headers = ['Rank', 'Athlete', 'Fastest Time', 'Date', 'Location', 'Gender', 'Age Category'];
-            const csvRows = [headers.join(',')];
-            displayedData.forEach((athlete, index) => {
-                csvRows.push([
-                    index + 1,
-                    `"${athlete.name}"`,
-                    athlete.fastest_time,
-                    athlete.date_of_time,
-                    `"${athlete.location || ''}"`,
-                    athlete.gender,
-                    athlete.age_category
-                ].join(','));
-            });
-            const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `championship_results_${selectedYear.replace('-', '_')}.csv`;
-            link.click();
-            URL.revokeObjectURL(link.href);
-        });
+        if (categories.includes(previousValue)) {
+            ageCategorySelect.value = previousValue;
+        } else {
+            ageCategorySelect.value = 'all';
+            activeAgeCategory = 'all';
+        }
+    };
 
-        function listenToYearData(yearString) {
-            if (unsubscribe) unsubscribe();
-            selectedYear = yearString;
-            championshipHeader.textContent = `Standings for ${yearString.replace('-', '/')}`;
-            loadingDiv.style.display = 'block';
-            resultsContent.classList.add('hidden');
-            allAthleteData = [];
+    filterButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            filterButtons.forEach(btn => { 
+                btn.classList.replace('bg-blue-500', 'bg-gray-200'); 
+                btn.classList.replace('text-white', 'text-gray-700'); 
+            });
+            button.classList.replace('bg-gray-200', 'bg-blue-500'); 
+            button.classList.replace('text-gray-700', 'text-white');
+            activeFilter = button.dataset.filter; 
+            activeAgeCategory = 'all';
+            ageCategorySelect.value = 'all';
             applyFilters();
+        });
+    });
 
-            const athletesCollectionRef = collection(db, `championships/${yearString}/athletes`);
-            unsubscribe = onSnapshot(athletesCollectionRef, (snapshot) => {
-                allAthleteData = snapshot.docs.map(doc => doc.data());
-                loadingDiv.style.display = 'none';
-                resultsContent.classList.remove('hidden');
-                applyFilters();
-            }, (error) => {
-                console.error(`Error for ${yearString}: `, error);
-                loadingDiv.textContent = "Error loading data. Try another season.";
-                noResultsMessage.classList.remove('hidden');
-                noResultsMessage.textContent = `No data found for the ${yearString.replace('-', '/')} season.`;
-            });
-        }
+    ageCategorySelect.addEventListener('change', () => {
+        activeAgeCategory = ageCategorySelect.value;
+        applyFilters();
+    });
 
-        async function initialize() {
-            try {
-                await signInAnonymously(auth);
+    resetFiltersBtn.addEventListener('click', () => {
+        activeFilter = 'all';
+        activeAgeCategory = 'all';
+        ageCategorySelect.value = 'all';
+        
+        filterButtons.forEach(btn => { 
+            btn.classList.replace('bg-blue-500', 'bg-gray-200'); 
+            btn.classList.replace('text-white', 'text-gray-700'); 
+        });
+        filterButtons[0].classList.replace('bg-gray-200', 'bg-blue-500');
+        filterButtons[0].classList.add('text-white');
+        
+        applyFilters();
+    });
+    
+    exportCsvButton.addEventListener('click', () => {
+        if (displayedData.length === 0) { showFeedback('No data to export.', 'info', 2000); return; }
+        const headers = ['Rank', 'Athlete', 'Fastest Time', 'Date', 'Location', 'Gender', 'Age Category'];
+        const csvRows = [headers.join(',')];
+        displayedData.forEach((athlete, index) => {
+            csvRows.push([
+                index + 1,
+                `"${athlete.name}"`,
+                athlete.fastest_time,
+                athlete.date_of_time,
+                `"${athlete.location || ''}"`,
+                athlete.gender,
+                athlete.age_category
+            ].join(','));
+        });
+        const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `championship_results_${selectedYear.replace('-', '_')}.csv`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+    });
 
-                // *** FIX: Enable the button and update text after successful login ***
-                submitButton.disabled = false;
-                submitButton.textContent = 'Submit Time';
+    function listenToYearData(yearString) {
+        if (unsubscribe) unsubscribe();
+        selectedYear = yearString;
+        championshipHeader.textContent = `Standings for ${yearString.replace('-', '/')}`;
+        loadingDiv.style.display = 'block';
+        resultsContent.classList.add('hidden');
+        allAthleteData = [];
+        applyFilters();
 
-                const metadataRef = doc(db, "championships", "_metadata");
-                onSnapshot(metadataRef, (docSnap) => {
-                    const currentSeason = getChampionshipYearString(new Date());
-                    let years = [];
+        const athletesCollectionRef = collection(db, `championships/${yearString}/athletes`);
+        unsubscribe = onSnapshot(athletesCollectionRef, (snapshot) => {
+            allAthleteData = snapshot.docs.map(doc => doc.data());
+            loadingDiv.style.display = 'none';
+            resultsContent.classList.remove('hidden');
+            applyFilters();
+        }, (error) => {
+            console.error(`Error for ${yearString}: `, error);
+            loadingDiv.textContent = "Error loading data. Try another season.";
+            noResultsMessage.classList.remove('hidden');
+            noResultsMessage.textContent = `No data found for the ${yearString.replace('-', '/')} season.`;
+        });
+    }
 
-                    if (docSnap.exists()) {
-                        years = docSnap.data().availableYears || [];
-                    }
-                    
-                    if (!years.includes(currentSeason)) {
-                        years.push(currentSeason);
-                    }
-                    
-                    years.sort().reverse(); 
+    async function initialize() {
+        try {
+            await signInAnonymously(auth);
 
-                    yearSelector.innerHTML = '';
-                    years.forEach(yearString => {
-                        const option = document.createElement('option');
-                        option.value = yearString;
-                        option.textContent = yearString.replace('-', '/');
-                        yearSelector.appendChild(option);
-                    });
+            submitButton.disabled = false;
+            submitButton.textContent = 'Submit Time';
 
-                    const initialYearToLoad = yearSelector.value || currentSeason;
-                    yearSelector.value = initialYearToLoad;
-                    if (selectedYear !== initialYearToLoad) {
-                         listenToYearData(initialYearToLoad);
-                    }
-                });
+            const metadataRef = doc(db, "championships", "_metadata");
+            onSnapshot(metadataRef, (docSnap) => {
+                const currentSeason = getChampionshipYearString(new Date());
+                let years = [];
+
+                if (docSnap.exists()) {
+                    years = docSnap.data().availableYears || [];
+                }
                 
-                yearSelector.addEventListener('change', () => listenToYearData(yearSelector.value));
+                if (!years.includes(currentSeason)) {
+                    years.push(currentSeason);
+                }
+                
+                years.sort().reverse(); 
 
-            } catch(error) {
-                console.error("Initialization failed:", error);
-                loadingDiv.textContent = "Could not connect to the server. Please refresh.";
-                // *** FIX: Update button text on connection failure ***
-                submitButton.textContent = 'Connection Failed';
-            }
+                yearSelector.innerHTML = '';
+                years.forEach(yearString => {
+                    const option = document.createElement('option');
+                    option.value = yearString;
+                    option.textContent = yearString.replace('-', '/');
+                    yearSelector.appendChild(option);
+                });
+
+                const initialYearToLoad = yearSelector.value || currentSeason;
+                yearSelector.value = initialYearToLoad;
+                if (selectedYear !== initialYearToLoad) {
+                     listenToYearData(initialYearToLoad);
+                }
+            });
+            
+            yearSelector.addEventListener('change', () => listenToYearData(yearSelector.value));
+
+        } catch(error) {
+            console.error("Initialization failed:", error);
+            loadingDiv.textContent = "Could not connect to the server. Please refresh.";
+            submitButton.textContent = 'Connection Failed';
         }
+    }
 
-        initialize();
-    </script>
+    initialize();
+</script>
+```
+
 </body>
 </html>
