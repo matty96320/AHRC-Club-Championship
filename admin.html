@@ -73,14 +73,18 @@
                     </div>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
-                     <span class="text-sm font-medium">Filter by:</span>
+                     <span class="text-sm font-medium">Filter Gender:</span>
                     <div id="filter-buttons-container">
                         <button data-filter-admin="all" class="filter-btn-admin admin-btn active text-sm px-3 py-1.5 rounded-md hover:bg-blue-500 hover:text-white transition">All</button>
                         <button data-filter-admin="male" class="filter-btn-admin admin-btn text-sm px-3 py-1.5 rounded-md hover:bg-blue-500 hover:text-white transition">Male</button>
                         <button data-filter-admin="female" class="filter-btn-admin admin-btn text-sm px-3 py-1.5 rounded-md hover:bg-blue-500 hover:text-white transition">Female</button>
                     </div>
                 </div>
-                <div id="age-category-filters-admin" class="flex flex-wrap gap-2 hidden"></div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-sm font-medium">Filter Age:</span>
+                    <div id="age-category-filters-admin" class="flex flex-wrap gap-2">
+                        </div>
+                </div>
             </div>
 
             <div class="overflow-x-auto">
@@ -318,15 +322,12 @@
             });
         }
 
+        // *** MODIFIED: This function now populates age categories independently of the gender filter ***
         function updateAdminAgeCategoryButtons() {
             ageCategoryFiltersAdminContainer.innerHTML = '';
-            if (activeFilterAdmin === 'all') {
-                ageCategoryFiltersAdminContainer.classList.add('hidden');
-                return;
-            }
             
-            ageCategoryFiltersAdminContainer.classList.remove('hidden');
-            const categories = [...new Set(allAthleteDataAdmin.filter(a => a.gender.toLowerCase() === activeFilterAdmin).map(a => a.age_category))].sort();
+            // Get ALL unique age categories from the current year's data
+            const categories = [...new Set(allAthleteDataAdmin.map(a => a.age_category))].sort();
 
             const createButton = (text, category) => {
                 const btn = document.createElement('button');
@@ -336,9 +337,15 @@
                 return btn;
             };
 
-            const genderText = activeFilterAdmin === 'male' ? 'Men' : 'Women';
-            ageCategoryFiltersAdminContainer.appendChild(createButton(`All ${genderText}`, 'all'));
-            categories.forEach(cat => ageCategoryFiltersAdminContainer.appendChild(createButton(cat, cat)));
+            // Add an "All Ages" button
+            ageCategoryFiltersAdminContainer.appendChild(createButton('All Ages', 'all'));
+            
+            // Add a button for each unique age category
+            categories.forEach(cat => {
+                if(cat) { // Ensure category is not null/undefined
+                    ageCategoryFiltersAdminContainer.appendChild(createButton(cat, cat));
+                }
+            });
         }
 
         // --- Table Actions (Edit/Delete) ---
@@ -450,7 +457,8 @@
                 const filterBtn = e.target.closest('.filter-btn-admin');
                 if (!filterBtn) return;
                 activeFilterAdmin = filterBtn.dataset.filterAdmin;
-                activeAgeCategoryAdmin = 'all'; // Reset age category on gender change
+                // *** MODIFIED: No longer resets the age category filter ***
+                // activeAgeCategoryAdmin = 'all'; 
                 applyAdminFilters();
             });
 
