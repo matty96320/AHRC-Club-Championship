@@ -10,11 +10,20 @@
         body { font-family: 'Inter', sans-serif; }
         .modal-backdrop { background-color: rgba(0,0,0,0.5); }
         .modal { transition: opacity 0.3s ease; }
+        .admin-btn.active {
+            background-color: #2563eb; /* bg-blue-600 */
+            color: white;
+        }
+        .admin-btn {
+            background-color: #e5e7eb; /* bg-gray-200 */
+            color: #374151; /* text-gray-700 */
+        }
     </style>
 </head>
 <body class="bg-gray-200 text-gray-800">
 
     <script>
+      // Firebase config is placed globally before module scripts
       const firebaseConfig = {
         apiKey: "AIzaSyAYLeTA8morhqnq0p_YC-t5MW6LuE2MzfI",
         authDomain: "ahrc-club-champs.firebaseapp.com",
@@ -55,6 +64,25 @@
                 <select id="yearSelectorAdmin" class="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></select>
             </div>
 
+            <div class="mb-4 space-y-4">
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-sm font-medium">Sort by:</span>
+                    <div id="sort-buttons-container">
+                        <button id="sort-by-time" class="sort-btn admin-btn active text-sm px-3 py-1.5 rounded-md hover:bg-blue-500 hover:text-white transition">Fastest Time</button>
+                        <button id="sort-by-date" class="sort-btn admin-btn text-sm px-3 py-1.5 rounded-md hover:bg-blue-500 hover:text-white transition">Newest Parkrun Date</button>
+                    </div>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                     <span class="text-sm font-medium">Filter by:</span>
+                    <div id="filter-buttons-container">
+                        <button data-filter-admin="all" class="filter-btn-admin admin-btn active text-sm px-3 py-1.5 rounded-md hover:bg-blue-500 hover:text-white transition">All</button>
+                        <button data-filter-admin="male" class="filter-btn-admin admin-btn text-sm px-3 py-1.5 rounded-md hover:bg-blue-500 hover:text-white transition">Male</button>
+                        <button data-filter-admin="female" class="filter-btn-admin admin-btn text-sm px-3 py-1.5 rounded-md hover:bg-blue-500 hover:text-white transition">Female</button>
+                    </div>
+                </div>
+                <div id="age-category-filters-admin" class="flex flex-wrap gap-2 hidden"></div>
+            </div>
+
             <div class="overflow-x-auto">
                 <table class="min-w-full bg-white border">
                     <thead class="bg-gray-200">
@@ -63,13 +91,15 @@
                             <th class="py-3 px-4 border-b text-left">Time</th>
                             <th class="py-3 px-4 border-b text-left">Date</th>
                             <th class="py-3 px-4 border-b text-left">Location</th>
+                            <th class="py-3 px-4 border-b text-left">Gender</th>
+                            <th class="py-3 px-4 border-b text-left">Age Cat</th>
                             <th class="py-3 px-4 border-b text-left">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="adminResultsBody">
                         </tbody>
                 </table>
-                 <p id="admin-no-results" class="text-center text-gray-500 py-8 hidden">No entries found for this season.</p>
+                 <p id="admin-no-results" class="text-center text-gray-500 py-8 hidden">No entries match the current filters.</p>
             </div>
         </div>
     </div>
@@ -117,7 +147,6 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        // *** FIX #2: Added 'getDoc' to the import list ***
         import { getFirestore, collection, doc, onSnapshot, updateDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const app = initializeApp(firebaseConfig);
@@ -139,9 +168,20 @@
         const yearSelector = document.getElementById('yearSelectorAdmin');
         const resultsBody = document.getElementById('adminResultsBody');
         const noResultsMsg = document.getElementById('admin-no-results');
+
+        // *** NEW: Filter/Sort DOM References ***
+        const sortButtonsContainer = document.getElementById('sort-buttons-container');
+        const filterButtonsContainer = document.getElementById('filter-buttons-container');
+        const ageCategoryFiltersAdminContainer = document.getElementById('age-category-filters-admin');
         
         let currentUnsubscribe;
         let selectedYearForEditing;
+
+        // *** NEW: State variables for sorting and filtering ***
+        let allAthleteDataAdmin = [];
+        let activeFilterAdmin = 'all';
+        let activeAgeCategoryAdmin = 'all';
+        let activeSortAdmin = 'time'; // 'time' or 'date'
 
         // --- Auth Handling ---
         onAuthStateChanged(auth, user => {
@@ -153,6 +193,7 @@
                 adminView.classList.add('hidden');
                 loginView.classList.remove('hidden');
                 if (currentUnsubscribe) currentUnsubscribe();
+                allAthleteDataAdmin = []; // Clear data on logout
             }
         });
 
@@ -179,7 +220,7 @@
             return month >= 10 ? `${year}-${year + 1}` : `${year - 1}-${year}`;
         };
         const timeToSeconds = (timeStr) => {
-            if (!timeStr || !timeStr.includes(':')) return 0; // Guard clause
+            if (!timeStr || !timeStr.includes(':')) return 0;
             const [minutes, seconds] = timeStr.split(':').map(Number);
             return (minutes * 60) + (seconds || 0);
         };
@@ -201,25 +242,62 @@
         function listenToYearData(yearString) {
             if (currentUnsubscribe) currentUnsubscribe();
             selectedYearForEditing = yearString;
+            // Reset filters when year changes
+            activeFilterAdmin = 'all';
+            activeAgeCategoryAdmin = 'all';
+            activeSortAdmin = 'time';
+
             const athletesCollectionRef = collection(db, `championships/${yearString}/athletes`);
             currentUnsubscribe = onSnapshot(athletesCollectionRef, (snapshot) => {
-                const athletes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                athletes.sort((a,b) => a.time_seconds - b.time_seconds);
-                renderAdminTable(athletes);
+                allAthleteDataAdmin = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                // Apply filters and render
+                applyAdminFilters();
             });
+        }
+
+        // *** NEW: Filter, Sort, and Render Logic ***
+        function applyAdminFilters() {
+            let filteredData = allAthleteDataAdmin;
+
+            // 1. Filter by Gender
+            if (activeFilterAdmin !== 'all') {
+                filteredData = filteredData.filter(a => a.gender.toLowerCase() === activeFilterAdmin);
+            }
+            
+            // 2. Filter by Age Category
+            if (activeAgeCategoryAdmin !== 'all') {
+                filteredData = filteredData.filter(a => a.age_category === activeAgeCategoryAdmin);
+            }
+
+            // 3. Sort Data
+            if (activeSortAdmin === 'time') {
+                filteredData.sort((a, b) => a.time_seconds - b.time_seconds);
+            } else if (activeSortAdmin === 'date') {
+                filteredData.sort((a, b) => new Date(b.date_of_time) - new Date(a.date_of_time));
+            }
+
+            // 4. Render the table
+            renderAdminTable(filteredData);
+            
+            // 5. Update UI (buttons)
+            updateAdminFilterButtons();
+            updateAdminAgeCategoryButtons();
         }
         
         function renderAdminTable(athletes) {
             resultsBody.innerHTML = '';
             noResultsMsg.classList.toggle('hidden', athletes.length > 0);
+            
             athletes.forEach(athlete => {
                 const row = document.createElement('tr');
-                // *** MODIFIED: Added Location cell (athlete.location) ***
+                // *** MODIFIED: Added Gender and Age Category to the table ***
                 row.innerHTML = `
                     <td class="py-3 px-4 border-b">${athlete.name}</td>
                     <td class="py-3 px-4 border-b font-semibold">${athlete.fastest_time}</td>
                     <td class="py-3 px-4 border-b">${new Date(athlete.date_of_time).toLocaleDateString()}</td>
                     <td class="py-3 px-4 border-b">${athlete.location || 'N/A'}</td>
+                    <td class="py-3 px-4 border-b">${athlete.gender}</td>
+                    <td class="py-3 px-4 border-b">${athlete.age_category}</td>
                     <td class="py-3 px-4 border-b space-x-2">
                         <button data-id="${athlete.id}" class="edit-btn bg-yellow-500 text-white text-sm font-bold py-1 px-3 rounded hover:bg-yellow-600">Edit</button>
                         <button data-id="${athlete.id}" data-name="${athlete.name}" class="delete-btn bg-red-500 text-white text-sm font-bold py-1 px-3 rounded hover:bg-red-600">Delete</button>
@@ -229,6 +307,41 @@
             });
         }
         
+        function updateAdminFilterButtons() {
+            // Update Sort Buttons
+            sortButtonsContainer.querySelectorAll('.sort-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.id === `sort-by-${activeSortAdmin}`);
+            });
+            // Update Filter Buttons
+            filterButtonsContainer.querySelectorAll('.filter-btn-admin').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.filterAdmin === activeFilterAdmin);
+            });
+        }
+
+        function updateAdminAgeCategoryButtons() {
+            ageCategoryFiltersAdminContainer.innerHTML = '';
+            if (activeFilterAdmin === 'all') {
+                ageCategoryFiltersAdminContainer.classList.add('hidden');
+                return;
+            }
+            
+            ageCategoryFiltersAdminContainer.classList.remove('hidden');
+            const categories = [...new Set(allAthleteDataAdmin.filter(a => a.gender.toLowerCase() === activeFilterAdmin).map(a => a.age_category))].sort();
+
+            const createButton = (text, category) => {
+                const btn = document.createElement('button');
+                btn.textContent = text;
+                btn.dataset.ageCategory = category;
+                btn.className = `age-filter-btn-admin admin-btn text-sm px-3 py-1.5 rounded-md hover:bg-blue-500 hover:text-white transition ${activeAgeCategoryAdmin === category ? 'active' : ''}`;
+                return btn;
+            };
+
+            const genderText = activeFilterAdmin === 'male' ? 'Men' : 'Women';
+            ageCategoryFiltersAdminContainer.appendChild(createButton(`All ${genderText}`, 'all'));
+            categories.forEach(cat => ageCategoryFiltersAdminContainer.appendChild(createButton(cat, cat)));
+        }
+
+        // --- Table Actions (Edit/Delete) ---
         resultsBody.addEventListener('click', async (e) => {
             const docId = e.target.dataset.id;
             if (!docId) return;
@@ -238,6 +351,7 @@
                 if (confirm(`Are you sure you want to delete the entry for ${athleteName}?`)) {
                     try {
                         await deleteDoc(doc(db, `championships/${selectedYearForEditing}/athletes`, docId));
+                        // Table will update automatically via onSnapshot
                     } catch (error) {
                         console.error("Delete failed:", error);
                         alert("Could not delete entry.");
@@ -246,11 +360,10 @@
             }
 
             if (e.target.classList.contains('edit-btn')) {
-                // We need the full data object to populate the form
-                const docRef = doc(db, `championships/${selectedYearForEditing}/athletes`, docId);
-                const docSnap = await getDoc(docRef); // This line now works
-                if (docSnap.exists()){
-                     openEditModal(docSnap.data(), docId);
+                // Find the data from our local array instead of a new DB call
+                const athleteData = allAthleteDataAdmin.find(a => a.id === docId);
+                if (athleteData) {
+                     openEditModal(athleteData, docId);
                 }
             }
         });
@@ -262,7 +375,6 @@
             document.getElementById('edit-gender').value = data.gender;
             document.getElementById('edit-parkrunDate').value = data.date_of_time;
             document.getElementById('edit-parkrunTime').value = data.fastest_time;
-            // *** MODIFIED: Populate the location field ***
             document.getElementById('edit-location').value = data.location || '';
             editModal.classList.remove('hidden');
         }
@@ -276,7 +388,6 @@
             const parkrunDate = document.getElementById('edit-parkrunDate').value;
             const parkrunTime = document.getElementById('edit-parkrunTime').value;
 
-            // *** MODIFIED: Added 'location' to the updatedData object ***
             const updatedData = {
                 name: document.getElementById('edit-fullName').value,
                 dob: dob,
@@ -292,13 +403,16 @@
                 const docRef = doc(db, `championships/${selectedYearForEditing}/athletes`, docId);
                 await updateDoc(docRef, updatedData);
                 editModal.classList.add('hidden');
+                // Table will update automatically via onSnapshot
             } catch(error) {
                 console.error("Update failed:", error);
                 alert("Could not save changes.");
             }
         });
 
+        // --- Initialization ---
         function initializeAdminPanel() {
+            // Load available years
             const metadataRef = doc(db, "championships", "_metadata");
             onSnapshot(metadataRef, (docSnap) => {
                 const currentSeason = getChampionshipYearString(new Date());
@@ -307,6 +421,7 @@
                 if (!years.includes(currentSeason)) years.push(currentSeason);
                 years.sort().reverse();
                 
+                const currentSelectedYear = yearSelector.value;
                 yearSelector.innerHTML = '';
                 years.forEach(yearString => {
                     const option = document.createElement('option');
@@ -315,12 +430,36 @@
                     yearSelector.appendChild(option);
                 });
 
-                const initialYear = yearSelector.value || currentSeason;
+                // Preserve selection or default to newest
+                const initialYear = years.includes(currentSelectedYear) ? currentSelectedYear : (yearSelector.value || currentSeason);
                 yearSelector.value = initialYear;
                 listenToYearData(initialYear);
             });
 
+            // --- Event Listeners for Filters/Sorts ---
             yearSelector.addEventListener('change', () => listenToYearData(yearSelector.value));
+
+            sortButtonsContainer.addEventListener('click', (e) => {
+                const sortBtn = e.target.closest('.sort-btn');
+                if (!sortBtn) return;
+                activeSortAdmin = sortBtn.id === 'sort-by-time' ? 'time' : 'date';
+                applyAdminFilters();
+            });
+
+            filterButtonsContainer.addEventListener('click', (e) => {
+                const filterBtn = e.target.closest('.filter-btn-admin');
+                if (!filterBtn) return;
+                activeFilterAdmin = filterBtn.dataset.filterAdmin;
+                activeAgeCategoryAdmin = 'all'; // Reset age category on gender change
+                applyAdminFilters();
+            });
+
+            ageCategoryFiltersAdminContainer.addEventListener('click', (e) => {
+                const ageBtn = e.target.closest('.age-filter-btn-admin');
+                if (!ageBtn) return;
+                activeAgeCategoryAdmin = ageBtn.dataset.ageCategory;
+                applyAdminFilters();
+            });
         }
         
     </script>
