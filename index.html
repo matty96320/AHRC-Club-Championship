@@ -62,8 +62,8 @@
                     <label for="ageCategory" class="block text-sm font-medium text-gray-700">Age Category (on date of parkrun)</label>
                     <select id="ageCategory" name="ageCategory" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                         <option value="">Select your age category...</option>
-                        <option value="Under 18">Under 18</option>
-                        <option value="18-29">18-29</option>
+                        <option value="Under 17">Under 17</option>
+                        <option value="17-29">17-29</option>
                         <option value="30-39">30-39</option>
                         <option value="40-49">40-49</option>
                         <option value="50-59">50-59</option>
@@ -242,8 +242,6 @@
         return (minutes * 60) + seconds;
     };
 
-    // *** MODIFIED: Removed calculateAgeCategory function ***
-
     const showFeedback = (message, type, duration = 4000) => {
         feedbackMessage.textContent = message;
         feedbackMessage.className = `feedback ${type}`;
@@ -271,16 +269,14 @@
                 return;
             }
             
-            // *** MODIFIED: Updated dataToSave object ***
             const dataToSave = {
                 name: fullName,
                 athlete_number: formData.get('athleteNumber').trim(),
-                // 'dob' field removed
                 gender: formData.get('gender'),
                 fastest_time: formData.get('parkrunTime'),
                 time_seconds: newTimeSeconds,
                 date_of_time: formData.get('parkrunDate'),
-                age_category: formData.get('ageCategory'), // <-- Changed to get value from dropdown
+                age_category: formData.get('ageCategory'), 
                 location: formData.get('parkrunLocation').trim()
             };
             await setDoc(athleteDocRef, dataToSave);
