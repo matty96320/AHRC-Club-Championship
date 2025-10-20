@@ -18,7 +18,6 @@
 </head>
 <body class="bg-gray-100 text-gray-800">
 
-```
 <div class="container mx-auto p-4 md:p-8">
     <header class="bg-white shadow-md rounded-lg p-6 mb-8 text-center">
         <h1 class="text-3xl font-bold text-blue-800">Ashington Hurst Running Club</h1>
@@ -44,6 +43,10 @@
                 <div>
                     <label for="fullName" class="block text-sm font-medium text-gray-700">Full Name</label>
                     <input type="text" id="fullName" name="fullName" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="athleteNumber" class="block text-sm font-medium text-gray-700">Parkrun Athlete Number (Optional)</label>
+                    <input type="text" id="athleteNumber" name="athleteNumber" placeholder="e.g., A1234567" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                 </div>
                 <div>
                     <label for="dob" class="block text-sm font-medium text-gray-700">Date of Birth</label>
@@ -268,8 +271,10 @@
                 return;
             }
             
+            // *** MODIFIED: Added athlete_number to the data being saved ***
             const dataToSave = {
                 name: fullName,
+                athlete_number: formData.get('athleteNumber').trim(),
                 dob: formData.get('dob'),
                 gender: formData.get('gender'),
                 fastest_time: formData.get('parkrunTime'),
@@ -504,7 +509,6 @@
 
     initialize();
 </script>
-```
 
 </body>
 </html>
