@@ -17,11 +17,6 @@
 </head>
 <body class="bg-gray-100 text-gray-800">
 
-    <!-- 
-      PASTE YOUR FIREBASE CONFIGURATION HERE 
-      This is the only manual step. Replace the placeholder object below
-      with the firebaseConfig object from your Firebase project settings.
-    -->
     <script>
 const manualfirebaseConfig = {
   apiKey: "AIzaSyAYLeTA8morhqnq0p_YC-t5MW6LuE2MzfI",
@@ -41,7 +36,6 @@ const manualfirebaseConfig = {
         </header>
 
         <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Submission Form Section -->
             <div class="lg:col-span-1 bg-white shadow-md rounded-lg p-6 h-fit">
                 <h2 class="text-2xl font-semibold mb-4 border-b pb-2">Submit Your Time</h2>
                 <form id="timeSubmissionForm" class="space-y-4">
@@ -68,12 +62,15 @@ const manualfirebaseConfig = {
                         <label for="parkrunTime" class="block text-sm font-medium text-gray-700">Parkrun Time (MM:SS)</label>
                         <input type="text" id="parkrunTime" name="parkrunTime" placeholder="e.g., 21:35" required pattern="\d{1,2}:\d{2}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                     </div>
+                    <div>
+                        <label for="parkrunLocation" class="block text-sm font-medium text-gray-700">Parkrun Location</label>
+                        <input type="text" id="parkrunLocation" name="parkrunLocation" placeholder="e.g., Horsham, Worthing" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    </div>
                     <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300 shadow-md">Submit Time</button>
                 </form>
                 <div id="feedbackMessage" class="feedback"></div>
             </div>
 
-            <!-- Results Section -->
             <div class="lg:col-span-2 bg-white shadow-md rounded-lg p-6">
                 <div class="flex flex-wrap justify-between items-center mb-4">
                      <h2 id="championshipHeader" class="text-2xl font-semibold">Championship Standings</h2>
@@ -104,6 +101,7 @@ const manualfirebaseConfig = {
                                     <th class="py-3 px-4 border-b text-left">Athlete</th>
                                     <th class="py-3 px-4 border-b text-left">Fastest Time</th>
                                     <th class="py-3 px-4 border-b text-left">Date</th>
+                                    <th class="py-3 px-4 border-b text-left">Location</th>
                                     <th class="py-3 px-4 border-b text-left">Gender</th>
                                     <th class="py-3 px-4 border-b text-left">Age Category</th>
                                 </tr>
@@ -126,7 +124,8 @@ const manualfirebaseConfig = {
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, getDoc, setDoc, onSnapshot, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const app = initializeApp(firebaseConfig);
+        // *** BUG FIX HERE: Used 'manualfirebaseConfig' instead of 'firebaseConfig' ***
+        const app = initializeApp(manualfirebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
@@ -202,7 +201,18 @@ const manualfirebaseConfig = {
                     showFeedback('This is not faster than your current best for this season.', 'info');
                     return;
                 }
-                const dataToSave = { name: fullName, dob: formData.get('dob'), gender: formData.get('gender'), fastest_time: formData.get('parkrunTime'), time_seconds: newTimeSeconds, date_of_time: formData.get('parkrunDate'), age_category: calculateAgeCategory(formData.get('dob'), formData.get('parkrunDate')) };
+                
+                // *** UPDATED dataToSave OBJECT ***
+                const dataToSave = {
+                    name: fullName,
+                    dob: formData.get('dob'),
+                    gender: formData.get('gender'),
+                    fastest_time: formData.get('parkrunTime'),
+                    time_seconds: newTimeSeconds,
+                    date_of_time: formData.get('parkrunDate'),
+                    age_category: calculateAgeCategory(formData.get('dob'), formData.get('parkrunDate')),
+                    location: formData.get('parkrunLocation').trim() // <-- Added location
+                };
                 await setDoc(athleteDocRef, dataToSave);
 
                 // --- NEW: Update the metadata document to ensure this year is listed ---
@@ -234,11 +244,13 @@ const manualfirebaseConfig = {
                 displayedData.forEach((athlete, index) => {
                     const row = document.createElement('tr');
                     row.className = 'hover:bg-gray-50';
+                    // *** UPDATED row.innerHTML to include location ***
                     row.innerHTML = `
                         <td class="py-3 px-4 border-b font-bold">${index + 1}</td>
                         <td class="py-3 px-4 border-b font-medium">${athlete.name}</td>
                         <td class="py-3 px-4 border-b font-semibold text-blue-700">${athlete.fastest_time}</td>
                         <td class="py-3 px-4 border-b">${new Date(athlete.date_of_time).toLocaleDateString()}</td>
+                        <td class="py-3 px-4 border-b">${athlete.location || ''}</td>
                         <td class="py-3 px-4 border-b">${athlete.gender}</td>
                         <td class="py-3 px-4 border-b">${athlete.age_category}</td>
                     `;
@@ -280,10 +292,20 @@ const manualfirebaseConfig = {
         
         exportCsvButton.addEventListener('click', () => {
             if (displayedData.length === 0) { showFeedback('No data to export.', 'info', 2000); return; }
-            const headers = ['Rank', 'Athlete', 'Fastest Time', 'Date', 'Gender', 'Age Category'];
+            // *** UPDATED CSV headers ***
+            const headers = ['Rank', 'Athlete', 'Fastest Time', 'Date', 'Location', 'Gender', 'Age Category'];
             const csvRows = [headers.join(',')];
             displayedData.forEach((athlete, index) => {
-                csvRows.push([index + 1, `"${athlete.name}"`, athlete.fastest_time, athlete.date_of_time, athlete.gender, athlete.age_category].join(','));
+                // *** UPDATED CSV row data ***
+                csvRows.push([
+                    index + 1,
+                    `"${athlete.name}"`,
+                    athlete.fastest_time,
+                    athlete.date_of_time,
+                    `"${athlete.location || ''}"`,
+                    athlete.gender,
+                    athlete.age_category
+                ].join(','));
             });
             const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
@@ -347,9 +369,10 @@ const manualfirebaseConfig = {
                     });
 
                     // Set the initial view to the current season
-                    yearSelector.value = currentSeason;
-                    if (selectedYear !== currentSeason) {
-                         listenToYearData(currentSeason);
+                    const initialYearToLoad = yearSelector.value || currentSeason;
+                    yearSelector.value = initialYearToLoad;
+                    if (selectedYear !== initialYearToLoad) {
+                         listenToYearData(initialYearToLoad);
                     }
                 });
                 
