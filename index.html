@@ -24,8 +24,20 @@
             <p class="text-xl text-gray-600">Self-Reporting Parkrun Championship</p>
         </header>
 
-        <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div class="lg:col-span-1 bg-white shadow-md rounded-lg p-6 h-fit">
+        <main class="space-y-8">
+            
+            <div class="bg-white shadow-md rounded-lg overflow-hidden">
+                <nav class="flex border-b border-gray-200">
+                    <button id="tab-form-btn" data-tab="form" class="tab-btn-nav px-6 py-3 font-semibold text-blue-600 border-b-2 border-blue-600">
+                        Submit Your Time
+                    </button>
+                    <button id="tab-results-btn" data-tab="results" class="tab-btn-nav px-6 py-3 font-semibold text-gray-500 hover:text-gray-700">
+                        Championship Standings
+                    </button>
+                </nav>
+            </div>
+
+            <div id="tab-pane-form" class="tab-pane bg-white shadow-md rounded-lg p-6 h-fit">
                 <h2 class="text-2xl font-semibold mb-4 border-b pb-2">Submit Your Time</h2>
                 <form id="timeSubmissionForm" class="space-y-4">
                     <div>
@@ -60,7 +72,7 @@
                 <div id="feedbackMessage" class="feedback"></div>
             </div>
 
-            <div class="lg:col-span-2 bg-white shadow-md rounded-lg p-6">
+            <div id="tab-pane-results" class="tab-pane bg-white shadow-md rounded-lg p-6 hidden">
                 <div class="flex flex-wrap justify-between items-center mb-4">
                      <h2 id="championshipHeader" class="text-2xl font-semibold">Championship Standings</h2>
                      <div>
@@ -131,6 +143,13 @@
         // *** FIX: Get reference to the submit button ***
         const submitButton = form.querySelector('button[type="submit"]'); 
         const feedbackMessage = document.getElementById('feedbackMessage');
+        
+        // *** NEW: Tab element references ***
+        const tabFormBtn = document.getElementById('tab-form-btn');
+        const tabResultsBtn = document.getElementById('tab-results-btn');
+        const tabFormPane = document.getElementById('tab-pane-form');
+        const tabResultsPane = document.getElementById('tab-pane-results');
+
         const loadingDiv = document.getElementById('loading');
         const resultsContent = document.getElementById('resultsContent');
         const resultsBody = document.getElementById('resultsBody');
@@ -140,6 +159,38 @@
         const noResultsMessage = document.getElementById('no-results');
         const yearSelector = document.getElementById('yearSelector');
         const championshipHeader = document.getElementById('championshipHeader');
+
+        // *** NEW: Tab switching logic ***
+        const tabButtons = [tabFormBtn, tabResultsBtn];
+        const tabPanes = [tabFormPane, tabResultsPane];
+
+        const setActiveTab = (tabName) => {
+            tabButtons.forEach(btn => {
+                if (btn.dataset.tab === tabName) {
+                    // Activate button
+                    btn.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
+                    btn.classList.remove('text-gray-500', 'hover:text-gray-700');
+                } else {
+                    // Deactivate button
+                    btn.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
+                    btn.classList.add('text-gray-500', 'hover:text-gray-700');
+                }
+            });
+
+            tabPanes.forEach(pane => {
+                if (pane.id === `tab-pane-${tabName}`) {
+                    // Show pane
+                    pane.classList.remove('hidden');
+                } else {
+                    // Hide pane
+                    pane.classList.add('hidden');
+                }
+            });
+        };
+
+        tabFormBtn.addEventListener('click', () => setActiveTab('form'));
+        tabResultsBtn.addEventListener('click', () => setActiveTab('results'));
+        // *** END NEW ***
 
         let allAthleteData = [];
         let displayedData = [];
