@@ -92,6 +92,7 @@
                     <thead class="bg-gray-200">
                         <tr>
                             <th class="py-3 px-4 border-b text-left">Athlete</th>
+                            <th class="py-3 px-4 border-b text-left">Athlete ID</th>
                             <th class="py-3 px-4 border-b text-left">Time</th>
                             <th class="py-3 px-4 border-b text-left">Date</th>
                             <th class="py-3 px-4 border-b text-left">Location</th>
@@ -116,6 +117,10 @@
                 <div>
                     <label for="edit-fullName" class="block text-sm font-medium text-gray-700">Full Name</label>
                     <input type="text" id="edit-fullName" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div>
+                    <label for="edit-athleteNumber" class="block text-sm font-medium text-gray-700">Parkrun Athlete Number (Optional)</label>
+                    <input type="text" id="edit-athleteNumber" placeholder="e.g., A1234567" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                 </div>
                 <div>
                     <label for="edit-dob" class="block text-sm font-medium text-gray-700">Date of Birth</label>
@@ -173,7 +178,6 @@
         const resultsBody = document.getElementById('adminResultsBody');
         const noResultsMsg = document.getElementById('admin-no-results');
 
-        // *** NEW: Filter/Sort DOM References ***
         const sortButtonsContainer = document.getElementById('sort-buttons-container');
         const filterButtonsContainer = document.getElementById('filter-buttons-container');
         const ageCategoryFiltersAdminContainer = document.getElementById('age-category-filters-admin');
@@ -181,7 +185,6 @@
         let currentUnsubscribe;
         let selectedYearForEditing;
 
-        // *** NEW: State variables for sorting and filtering ***
         let allAthleteDataAdmin = [];
         let activeFilterAdmin = 'all';
         let activeAgeCategoryAdmin = 'all';
@@ -246,7 +249,6 @@
         function listenToYearData(yearString) {
             if (currentUnsubscribe) currentUnsubscribe();
             selectedYearForEditing = yearString;
-            // Reset filters when year changes
             activeFilterAdmin = 'all';
             activeAgeCategoryAdmin = 'all';
             activeSortAdmin = 'time';
@@ -254,36 +256,28 @@
             const athletesCollectionRef = collection(db, `championships/${yearString}/athletes`);
             currentUnsubscribe = onSnapshot(athletesCollectionRef, (snapshot) => {
                 allAthleteDataAdmin = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                // Apply filters and render
                 applyAdminFilters();
             });
         }
 
-        // *** NEW: Filter, Sort, and Render Logic ***
         function applyAdminFilters() {
             let filteredData = allAthleteDataAdmin;
 
-            // 1. Filter by Gender
             if (activeFilterAdmin !== 'all') {
                 filteredData = filteredData.filter(a => a.gender.toLowerCase() === activeFilterAdmin);
             }
             
-            // 2. Filter by Age Category
             if (activeAgeCategoryAdmin !== 'all') {
                 filteredData = filteredData.filter(a => a.age_category === activeAgeCategoryAdmin);
             }
 
-            // 3. Sort Data
             if (activeSortAdmin === 'time') {
                 filteredData.sort((a, b) => a.time_seconds - b.time_seconds);
             } else if (activeSortAdmin === 'date') {
                 filteredData.sort((a, b) => new Date(b.date_of_time) - new Date(a.date_of_time));
             }
 
-            // 4. Render the table
             renderAdminTable(filteredData);
-            
-            // 5. Update UI (buttons)
             updateAdminFilterButtons();
             updateAdminAgeCategoryButtons();
         }
@@ -294,9 +288,10 @@
             
             athletes.forEach(athlete => {
                 const row = document.createElement('tr');
-                // *** MODIFIED: Added Gender and Age Category to the table ***
+                // *** MODIFIED: Added athlete.athlete_number to the table row ***
                 row.innerHTML = `
                     <td class="py-3 px-4 border-b">${athlete.name}</td>
+                    <td class="py-3 px-4 border-b">${athlete.athlete_number || 'N/A'}</td>
                     <td class="py-3 px-4 border-b font-semibold">${athlete.fastest_time}</td>
                     <td class="py-3 px-4 border-b">${new Date(athlete.date_of_time).toLocaleDateString()}</td>
                     <td class="py-3 px-4 border-b">${athlete.location || 'N/A'}</td>
@@ -312,21 +307,17 @@
         }
         
         function updateAdminFilterButtons() {
-            // Update Sort Buttons
             sortButtonsContainer.querySelectorAll('.sort-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.id === `sort-by-${activeSortAdmin}`);
             });
-            // Update Filter Buttons
             filterButtonsContainer.querySelectorAll('.filter-btn-admin').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.filterAdmin === activeFilterAdmin);
             });
         }
 
-        // *** MODIFIED: This function now populates age categories independently of the gender filter ***
         function updateAdminAgeCategoryButtons() {
             ageCategoryFiltersAdminContainer.innerHTML = '';
             
-            // Get ALL unique age categories from the current year's data
             const categories = [...new Set(allAthleteDataAdmin.map(a => a.age_category))].sort();
 
             const createButton = (text, category) => {
@@ -337,12 +328,10 @@
                 return btn;
             };
 
-            // Add an "All Ages" button
             ageCategoryFiltersAdminContainer.appendChild(createButton('All Ages', 'all'));
             
-            // Add a button for each unique age category
             categories.forEach(cat => {
-                if(cat) { // Ensure category is not null/undefined
+                if(cat) { 
                     ageCategoryFiltersAdminContainer.appendChild(createButton(cat, cat));
                 }
             });
@@ -358,7 +347,6 @@
                 if (confirm(`Are you sure you want to delete the entry for ${athleteName}?`)) {
                     try {
                         await deleteDoc(doc(db, `championships/${selectedYearForEditing}/athletes`, docId));
-                        // Table will update automatically via onSnapshot
                     } catch (error) {
                         console.error("Delete failed:", error);
                         alert("Could not delete entry.");
@@ -367,7 +355,6 @@
             }
 
             if (e.target.classList.contains('edit-btn')) {
-                // Find the data from our local array instead of a new DB call
                 const athleteData = allAthleteDataAdmin.find(a => a.id === docId);
                 if (athleteData) {
                      openEditModal(athleteData, docId);
@@ -375,9 +362,11 @@
             }
         });
 
+        // *** MODIFIED: Added athlete_number to modal population ***
         function openEditModal(data, docId) {
             document.getElementById('edit-doc-id').value = docId;
             document.getElementById('edit-fullName').value = data.name;
+            document.getElementById('edit-athleteNumber').value = data.athlete_number || '';
             document.getElementById('edit-dob').value = data.dob;
             document.getElementById('edit-gender').value = data.gender;
             document.getElementById('edit-parkrunDate').value = data.date_of_time;
@@ -388,6 +377,7 @@
 
         cancelEditButton.addEventListener('click', () => editModal.classList.add('hidden'));
 
+        // *** MODIFIED: Added athlete_number to update data ***
         editForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const docId = document.getElementById('edit-doc-id').value;
@@ -397,6 +387,7 @@
 
             const updatedData = {
                 name: document.getElementById('edit-fullName').value,
+                athlete_number: document.getElementById('edit-athleteNumber').value.trim(),
                 dob: dob,
                 gender: document.getElementById('edit-gender').value,
                 date_of_time: parkrunDate,
@@ -410,7 +401,6 @@
                 const docRef = doc(db, `championships/${selectedYearForEditing}/athletes`, docId);
                 await updateDoc(docRef, updatedData);
                 editModal.classList.add('hidden');
-                // Table will update automatically via onSnapshot
             } catch(error) {
                 console.error("Update failed:", error);
                 alert("Could not save changes.");
@@ -419,7 +409,6 @@
 
         // --- Initialization ---
         function initializeAdminPanel() {
-            // Load available years
             const metadataRef = doc(db, "championships", "_metadata");
             onSnapshot(metadataRef, (docSnap) => {
                 const currentSeason = getChampionshipYearString(new Date());
@@ -437,13 +426,11 @@
                     yearSelector.appendChild(option);
                 });
 
-                // Preserve selection or default to newest
                 const initialYear = years.includes(currentSelectedYear) ? currentSelectedYear : (yearSelector.value || currentSeason);
                 yearSelector.value = initialYear;
                 listenToYearData(initialYear);
             });
 
-            // --- Event Listeners for Filters/Sorts ---
             yearSelector.addEventListener('change', () => listenToYearData(yearSelector.value));
 
             sortButtonsContainer.addEventListener('click', (e) => {
@@ -457,8 +444,6 @@
                 const filterBtn = e.target.closest('.filter-btn-admin');
                 if (!filterBtn) return;
                 activeFilterAdmin = filterBtn.dataset.filterAdmin;
-                // *** MODIFIED: No longer resets the age category filter ***
-                // activeAgeCategoryAdmin = 'all'; 
                 applyAdminFilters();
             });
 
