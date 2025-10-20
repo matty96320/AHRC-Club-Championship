@@ -55,7 +55,7 @@
                         <label for="parkrunLocation" class="block text-sm font-medium text-gray-700">Parkrun Location</label>
                         <input type="text" id="parkrunLocation" name="parkrunLocation" placeholder="e.g., Horsham, Worthing" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                     </div>
-                    <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300 shadow-md">Submit Time</button>
+                    <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300 shadow-md disabled:bg-gray-400" disabled>Connecting...</button>
                 </form>
                 <div id="feedbackMessage" class="feedback"></div>
             </div>
@@ -128,6 +128,8 @@
         const db = getFirestore(app);
 
         const form = document.getElementById('timeSubmissionForm');
+        // *** FIX: Get reference to the submit button ***
+        const submitButton = form.querySelector('button[type="submit"]'); 
         const feedbackMessage = document.getElementById('feedbackMessage');
         const loadingDiv = document.getElementById('loading');
         const resultsContent = document.getElementById('resultsContent');
@@ -335,6 +337,10 @@
             try {
                 await signInAnonymously(auth);
 
+                // *** FIX: Enable the button and update text after successful login ***
+                submitButton.disabled = false;
+                submitButton.textContent = 'Submit Time';
+
                 const metadataRef = doc(db, "championships", "_metadata");
                 onSnapshot(metadataRef, (docSnap) => {
                     const currentSeason = getChampionshipYearString(new Date());
@@ -370,6 +376,8 @@
             } catch(error) {
                 console.error("Initialization failed:", error);
                 loadingDiv.textContent = "Could not connect to the server. Please refresh.";
+                // *** FIX: Update button text on connection failure ***
+                submitButton.textContent = 'Connection Failed';
             }
         }
 
