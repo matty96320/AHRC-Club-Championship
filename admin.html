@@ -14,19 +14,17 @@
 </head>
 <body class="bg-gray-200 text-gray-800">
 
-    <!-- Paste the same firebaseConfig from your main app here -->
     <script>
       const firebaseConfig = {
-        apiKey: "YOUR_API_KEY",
-        authDomain: "YOUR_AUTH_DOMAIN",
-        projectId: "YOUR_PROJECT_ID",
-        storageBucket: "YOUR_STORAGE_BUCKET",
-        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-        appId: "YOUR_APP_ID"
+        apiKey: "AIzaSyAYLeTA8morhqnq0p_YC-t5MW6LuE2MzfI",
+        authDomain: "ahrc-club-champs.firebaseapp.com",
+        projectId: "ahrc-club-champs",
+        storageBucket: "ahrc-club-champs.firebasestorage.app",
+        messagingSenderId: "275377232283",
+        appId: "1:275377232283:web:037a7615609012a61f293e"
       };
     </script>
 
-    <!-- Login View -->
     <div id="login-view" class="min-h-screen flex items-center justify-center">
         <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-sm">
             <h2 class="text-2xl font-bold text-center mb-6">Admin Login</h2>
@@ -45,7 +43,6 @@
         </div>
     </div>
 
-    <!-- Admin Panel View (hidden by default) -->
     <div id="admin-view" class="hidden container mx-auto p-4 md:p-8">
         <header class="flex justify-between items-center mb-6">
             <h1 class="text-3xl font-bold text-gray-800">Admin Control Panel</h1>
@@ -65,19 +62,18 @@
                             <th class="py-3 px-4 border-b text-left">Athlete</th>
                             <th class="py-3 px-4 border-b text-left">Time</th>
                             <th class="py-3 px-4 border-b text-left">Date</th>
+                            <th class="py-3 px-4 border-b text-left">Location</th>
                             <th class="py-3 px-4 border-b text-left">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="adminResultsBody">
-                        <!-- Rows will be populated by JS -->
-                    </tbody>
+                        </tbody>
                 </table>
                  <p id="admin-no-results" class="text-center text-gray-500 py-8 hidden">No entries found for this season.</p>
             </div>
         </div>
     </div>
 
-    <!-- Edit Modal (hidden by default) -->
     <div id="edit-modal" class="fixed inset-0 z-50 overflow-y-auto hidden modal-backdrop flex items-center justify-center">
         <div class="bg-white rounded-lg shadow-xl p-8 m-4 max-w-xl w-full">
             <h2 class="text-2xl font-semibold mb-4">Edit Entry</h2>
@@ -106,6 +102,10 @@
                     <label for="edit-parkrunTime" class="block text-sm font-medium text-gray-700">Parkrun Time (MM:SS)</label>
                     <input type="text" id="edit-parkrunTime" placeholder="e.g., 21:35" required pattern="\d{1,2}:\d{2}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                 </div>
+                <div>
+                    <label for="edit-location" class="block text-sm font-medium text-gray-700">Parkrun Location</label>
+                    <input type="text" id="edit-location" placeholder="e.g., Horsham" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
                 <div class="flex justify-end space-x-4 pt-4">
                     <button type="button" id="cancel-edit" class="bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-400">Cancel</button>
                     <button type="submit" class="bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700">Save Changes</button>
@@ -117,7 +117,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, onSnapshot, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        // *** FIX #2: Added 'getDoc' to the import list ***
+        import { getFirestore, collection, doc, onSnapshot, updateDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -178,6 +179,7 @@
             return month >= 10 ? `${year}-${year + 1}` : `${year - 1}-${year}`;
         };
         const timeToSeconds = (timeStr) => {
+            if (!timeStr || !timeStr.includes(':')) return 0; // Guard clause
             const [minutes, seconds] = timeStr.split(':').map(Number);
             return (minutes * 60) + (seconds || 0);
         };
@@ -212,10 +214,12 @@
             noResultsMsg.classList.toggle('hidden', athletes.length > 0);
             athletes.forEach(athlete => {
                 const row = document.createElement('tr');
+                // *** MODIFIED: Added Location cell (athlete.location) ***
                 row.innerHTML = `
                     <td class="py-3 px-4 border-b">${athlete.name}</td>
                     <td class="py-3 px-4 border-b font-semibold">${athlete.fastest_time}</td>
                     <td class="py-3 px-4 border-b">${new Date(athlete.date_of_time).toLocaleDateString()}</td>
+                    <td class="py-3 px-4 border-b">${athlete.location || 'N/A'}</td>
                     <td class="py-3 px-4 border-b space-x-2">
                         <button data-id="${athlete.id}" class="edit-btn bg-yellow-500 text-white text-sm font-bold py-1 px-3 rounded hover:bg-yellow-600">Edit</button>
                         <button data-id="${athlete.id}" data-name="${athlete.name}" class="delete-btn bg-red-500 text-white text-sm font-bold py-1 px-3 rounded hover:bg-red-600">Delete</button>
@@ -242,17 +246,9 @@
             }
 
             if (e.target.classList.contains('edit-btn')) {
-                const row = e.target.closest('tr');
-                const athleteData = {
-                    id: docId,
-                    name: row.cells[0].textContent,
-                    time: row.cells[1].textContent,
-                    date: row.cells[2].textContent
-                };
-                
                 // We need the full data object to populate the form
                 const docRef = doc(db, `championships/${selectedYearForEditing}/athletes`, docId);
-                const docSnap = await getDoc(docRef); // You need to import getDoc
+                const docSnap = await getDoc(docRef); // This line now works
                 if (docSnap.exists()){
                      openEditModal(docSnap.data(), docId);
                 }
@@ -266,6 +262,8 @@
             document.getElementById('edit-gender').value = data.gender;
             document.getElementById('edit-parkrunDate').value = data.date_of_time;
             document.getElementById('edit-parkrunTime').value = data.fastest_time;
+            // *** MODIFIED: Populate the location field ***
+            document.getElementById('edit-location').value = data.location || '';
             editModal.classList.remove('hidden');
         }
 
@@ -278,6 +276,7 @@
             const parkrunDate = document.getElementById('edit-parkrunDate').value;
             const parkrunTime = document.getElementById('edit-parkrunTime').value;
 
+            // *** MODIFIED: Added 'location' to the updatedData object ***
             const updatedData = {
                 name: document.getElementById('edit-fullName').value,
                 dob: dob,
@@ -285,7 +284,8 @@
                 date_of_time: parkrunDate,
                 fastest_time: parkrunTime,
                 time_seconds: timeToSeconds(parkrunTime),
-                age_category: calculateAgeCategory(dob, parkrunDate)
+                age_category: calculateAgeCategory(dob, parkrunDate),
+                location: document.getElementById('edit-location').value.trim()
             };
             
             try {
@@ -315,8 +315,9 @@
                     yearSelector.appendChild(option);
                 });
 
-                yearSelector.value = currentSeason;
-                listenToYearData(currentSeason);
+                const initialYear = yearSelector.value || currentSeason;
+                yearSelector.value = initialYear;
+                listenToYearData(initialYear);
             });
 
             yearSelector.addEventListener('change', () => listenToYearData(yearSelector.value));
@@ -325,37 +326,3 @@
     </script>
 </body>
 </html>
-
-2. New Firebase Security Rules
-To make the admin panel work, you need to update your Firestore security rules. This is the most important step. The new rules separate permissions for creating, editing, and deleting data.
-Instructions:
- * Go to your Firebase Project > Firestore Database > Rules tab.
- * Delete everything in the editor and replace it with the code below.
- * Crucially, change 'admin@yourclub.com' to the email address you will use for your admin login.
- * Click Publish.
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-  
-    // Rule for the metadata document that stores the list of years
-    match /championships/_metadata {
-      // Anyone can read the list of years to populate the dropdown
-      allow read: if true;
-      // Any authenticated user can add a new year to the list
-      allow write: if request.auth != null;
-    }
-  
-    // Rules for individual athlete entries in any given year
-    match /championships/{year}/athletes/{athleteId} {
-      // Anyone can read the championship results
-      allow read: if true;
-      
-      // Anyone can CREATE a new entry (for self-reporting)
-      allow create: if request.auth != null;
-      
-      // ONLY the designated admin can UPDATE or DELETE entries
-      allow update, delete: if request.auth.email == 'admin@yourclub.com';
-    }
-  }
-}
-
