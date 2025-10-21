@@ -1,10 +1,9 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AHRC Self-Reporting Championship</title>
+    <title>AHRC Parkrun Club Championship</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -33,7 +32,7 @@
         <img src="https://matty96320.github.io/AHRC-Club-Championship/IMG_0070.jpeg"alt="Ashington Hirst Running Club Logo" class="mx-auto h-24 mb-4">
         
         <h1 class="text-3xl font-bold text-ahrc-purple">Ashington Hirst Running Club</h1>
-        <p class="text-xl text-gray-600">Self-Reporting Parkrun Championship</p>
+        <p class="text-xl text-gray-600">Parkrun Club Championship</p>
     </header>
 
     <main class="space-y-8">
@@ -187,6 +186,7 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
+    // ... Element selections (unchanged) ...
     const form = document.getElementById('timeSubmissionForm');
     const submitButton = form.querySelector('button[type="submit"]'); 
     const feedbackMessage = document.getElementById('feedbackMessage');
@@ -212,6 +212,8 @@
     const tabButtons = [tabFormBtn, tabResultsBtn];
     const tabPanes = [tabFormPane, tabResultsPane];
 
+
+    // ... Helper functions (setActiveTab, getChampionshipYearString, timeToSeconds, showFeedback) (unchanged) ...
     const setActiveTab = (tabName) => {
         tabButtons.forEach(btn => {
             if (btn.dataset.tab === tabName) {
@@ -261,6 +263,8 @@
         setTimeout(() => { feedbackMessage.style.display = 'none'; }, duration);
     };
 
+
+    // ... Form submission logic (unchanged) ...
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const formData = new FormData(form);
@@ -304,6 +308,7 @@
         }
     });
 
+    // ... Filter logic (applyFilters, updateFilterSummary) (unchanged) ...
     const applyFilters = () => {
         let filteredData = allAthleteData;
         if (activeFilter !== 'all') filteredData = filteredData.filter(a => a.gender.toLowerCase() === activeFilter);
@@ -335,15 +340,35 @@
         }
     };
 
+
+    // ##########################################
+    // ## MODIFICATION 1: Updated renderTable function ##
+    // ##########################################
     const renderTable = () => {
         resultsBody.innerHTML = '';
         noResultsMessage.classList.toggle('hidden', displayedData.length > 0);
+
+        let currentRank = 0;
+        let lastTimeSeconds = -1;
+
         if (displayedData.length > 0) {
             displayedData.forEach((athlete, index) => {
+                let rankToShow;
+
+                if (athlete.time_seconds !== lastTimeSeconds) {
+                    // This is a new time, so the rank is the current position (index + 1)
+                    currentRank = index + 1;
+                    lastTimeSeconds = athlete.time_seconds;
+                    rankToShow = currentRank;
+                } else {
+                    // This is a tied time, so use the same rank as the previous athlete
+                    rankToShow = currentRank;
+                }
+                
                 const row = document.createElement('tr');
                 row.className = 'hover:bg-gray-50';
                 row.innerHTML = `
-                    <td class="py-3 px-4 border-b font-bold">${index + 1}</td>
+                    <td class="py-3 px-4 border-b font-bold">${rankToShow}</td>
                     <td class="py-3 px-4 border-b font-medium">${athlete.name}</td>
                     <td class="py-3 px-4 border-b font-semibold text-ahrc-purple">${athlete.fastest_time}</td>
                     <td class="py-3 px-4 border-b">${new Date(athlete.date_of_time).toLocaleDateString()}</td>
@@ -356,6 +381,7 @@
         }
     };
     
+    // ... Other functions (updateAgeCategoryDropdown, filter listeners, exportCsv, listenToYearData) (unchanged) ...
     const updateAgeCategoryDropdown = () => {
         const previousValue = ageCategorySelect.value;
         ageCategorySelect.innerHTML = '<option value="all">All Ages</option>';
@@ -425,11 +451,14 @@
     
     exportCsvButton.addEventListener('click', () => {
         if (displayedData.length === 0) { showFeedback('No data to export.', 'info', 2000); return; }
+        // Note: The CSV export will still show sequential ranks (index + 1),
+        // because it doesn't re-use the ranking logic from renderTable.
+        // This could be updated if needed.
         const headers = ['Rank', 'Athlete', 'Fastest Time', 'Date', 'Location', 'Gender', 'Age Category'];
         const csvRows = [headers.join(',')];
         displayedData.forEach((athlete, index) => {
             csvRows.push([
-                index + 1,
+                index + 1, // This does not reflect the "tie" rank logic
                 `"${athlete.name}"`,
                 athlete.fastest_time,
                 athlete.date_of_time,
@@ -491,6 +520,7 @@
                 
                 years.sort().reverse(); 
 
+                const currentSelectedYearInDropdown = yearSelector.value;
                 yearSelector.innerHTML = '';
                 years.forEach(yearString => {
                     const option = document.createElement('option');
@@ -499,10 +529,24 @@
                     yearSelector.appendChild(option);
                 });
 
-                const initialYearToLoad = yearSelector.value || currentSeason;
-                yearSelector.value = initialYearToLoad;
-                if (selectedYear !== initialYearToLoad) {
-                     listenToYearData(initialYearToLoad);
+                // #################################################
+                // ## MODIFICATION 2: Default to currentSeason    ##
+                // #################################################
+                
+                // Check if the dropdown already has a year selected AND it's not the first-time load (selectedYear)
+                // If so, keep the user's selection.
+                // Otherwise, default to the current season.
+                let yearToLoad;
+                if(selectedYear && years.includes(currentSelectedYearInDropdown)) {
+                    yearToLoad = currentSelectedYearInDropdown;
+                } else {
+                    yearToLoad = currentSeason;
+                }
+
+                yearSelector.value = yearToLoad; // Explicitly set dropdown to the desired year
+                
+                if (selectedYear !== yearToLoad) {
+                     listenToYearData(yearToLoad);
                 }
             });
             
