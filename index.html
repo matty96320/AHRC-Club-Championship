@@ -14,13 +14,25 @@
         .feedback.success { background-color: #d1fae5; color: #065f46; }
         .feedback.error { background-color: #fee2e2; color: #991b1b; }
         .feedback.info { background-color: #dbeafe; color: #1e40af; }
+        /* Custom colors for AHRC */
+        .bg-ahrc-yellow { background-color: #FDD023; }
+        .text-ahrc-purple { color: #5C2D91; }
+        .border-ahrc-yellow { border-color: #FDD023; }
+        .bg-ahrc-purple { background-color: #5C2D91; }
+        .hover\:bg-ahrc-purple-darker:hover { background-color: #4A247A; } /* Slightly darker purple for hover */
+        .focus\:border-ahrc-yellow:focus { border-color: #FDD023; }
+        .focus\:ring-ahrc-yellow:focus { ring-color: #FDD023; }
+        .text-ahrc-yellow { color: #FDD023; }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
 
 <div class="container mx-auto p-4 md:p-8">
     <header class="bg-white shadow-md rounded-lg p-6 mb-8 text-center">
-        <h1 class="text-3xl font-bold text-blue-800">Ashington Hurst Running Club</h1>
+        
+        <img src="https://matty96320.github.io/AHRC-Club-Championship/IMG_0070.jpeg"alt="Ashington Hirst Running Club Logo" class="mx-auto h-24 mb-4">
+        
+        <h1 class="text-3xl font-bold text-ahrc-purple">Ashington Hirst Running Club</h1>
         <p class="text-xl text-gray-600">Self-Reporting Parkrun Championship</p>
     </header>
 
@@ -28,7 +40,7 @@
         
         <div class="bg-white shadow-md rounded-lg overflow-hidden">
             <nav class="flex border-b border-gray-200">
-                <button id="tab-form-btn" data-tab="form" class="tab-btn-nav px-6 py-3 font-semibold text-blue-600 border-b-2 border-blue-600">
+                <button id="tab-form-btn" data-tab="form" class="tab-btn-nav px-6 py-3 font-semibold text-ahrc-purple border-b-2 border-ahrc-purple">
                     Submit Your Time
                 </button>
                 <button id="tab-results-btn" data-tab="results" class="tab-btn-nav px-6 py-3 font-semibold text-gray-500 hover:text-gray-700">
@@ -42,16 +54,16 @@
             <form id="timeSubmissionForm" class="space-y-4">
                 <div>
                     <label for="fullName" class="block text-sm font-medium text-gray-700">Full Name</label>
-                    <input type="text" id="fullName" name="fullName" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <input type="text" id="fullName" name="fullName" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-ahrc-yellow focus:ring-ahrc-yellow">
                 </div>
                 <div>
                     <label for="athleteNumber" class="block text-sm font-medium text-gray-700">Parkrun Athlete Number (Optional)</label>
-                    <input type="text" id="athleteNumber" name="athleteNumber" placeholder="e.g., A1234567" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <input type="text" id="athleteNumber" name="athleteNumber" placeholder="e.g., A1234567" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-ahrc-yellow focus:ring-ahrc-yellow">
                 </div>
                 
                 <div>
                     <label for="gender" class="block text-sm font-medium text-gray-700">Gender</label>
-                    <select id="gender" name="gender" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <select id="gender" name="gender" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-ahrc-yellow focus:ring-ahrc-yellow">
                         <option value="">Select gender...</option>
                         <option value="Male">Male</option>
                         <option value="Female">Female</option>
@@ -60,7 +72,7 @@
 
                 <div>
                     <label for="ageCategory" class="block text-sm font-medium text-gray-700">Age Category (on date of parkrun)</label>
-                    <select id="ageCategory" name="ageCategory" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <select id="ageCategory" name="ageCategory" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-ahrc-yellow focus:ring-ahrc-yellow">
                         <option value="">Select your age category...</option>
                         <option value="Under 17">Under 17</option>
                         <option value="17-29">17-29</option>
@@ -74,17 +86,17 @@
 
                 <div>
                     <label for="parkrunDate" class="block text-sm font-medium text-gray-700">Date of Parkrun</label>
-                    <input type="date" id="parkrunDate" name="parkrunDate" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <input type="date" id="parkrunDate" name="parkrunDate" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-ahrc-yellow focus:ring-ahrc-yellow">
                 </div>
                 <div>
                     <label for="parkrunTime" class="block text-sm font-medium text-gray-700">Parkrun Time (MM:SS)</label>
-                    <input type="text" id="parkrunTime" name="parkrunTime" placeholder="e.g., 21:35" required pattern="\d{1,2}:\d{2}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <input type="text" id="parkrunTime" name="parkrunTime" placeholder="e.g., 21:35" required pattern="\d{1,2}:\d{2}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-ahrc-yellow focus:ring-ahrc-yellow">
                 </div>
                 <div>
                     <label for="parkrunLocation" class="block text-sm font-medium text-gray-700">Parkrun Location</label>
-                    <input type="text" id="parkrunLocation" name="parkrunLocation" placeholder="e.g., Horsham, Worthing" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <input type="text" id="parkrunLocation" name="parkrunLocation" placeholder="e.g., Horsham, Worthing" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-ahrc-yellow focus:ring-ahrc-yellow">
                 </div>
-                <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300 shadow-md disabled:bg-gray-400" disabled>Connecting...</button>
+                <button type="submit" class="w-full bg-ahrc-purple text-white font-bold py-2 px-4 rounded-lg hover:bg-ahrc-purple-darker transition duration-300 shadow-md disabled:bg-gray-400" disabled>Connecting...</button>
             </form>
             <div id="feedbackMessage" class="feedback"></div>
         </div>
@@ -94,7 +106,7 @@
                  <h2 id="championshipHeader" class="text-2xl font-semibold">Championship Standings</h2>
                  <div>
                     <label for="yearSelector" class="text-sm font-medium mr-2">Season:</label>
-                    <select id="yearSelector" class="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></select>
+                    <select id="yearSelector" class="rounded-md border-gray-300 shadow-sm focus:border-ahrc-yellow focus:ring-ahrc-yellow"></select>
                  </div>
             </div>
            
@@ -108,14 +120,14 @@
                         <div class="flex-1 min-w-[200px]">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Gender</label>
                             <div class="flex gap-2">
-                                <button data-filter="all" class="filter-btn bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition flex-1">All Athletes</button>
+                                <button data-filter="all" class="filter-btn bg-ahrc-purple text-white px-4 py-2 rounded-md hover:bg-ahrc-purple-darker transition flex-1">All Athletes</button>
                                 <button data-filter="male" class="filter-btn bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition flex-1">Men</button>
                                 <button data-filter="female" class="filter-btn bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition flex-1">Women</button>
                             </div>
                         </div>
                         <div class="flex-1 min-w-[200px]">
                             <label for="ageCategorySelect" class="block text-sm font-medium text-gray-700 mb-2">Age Category</label>
-                            <select id="ageCategorySelect" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-2">
+                            <select id="ageCategorySelect" class="w-full rounded-md border-gray-300 shadow-sm focus:border-ahrc-yellow focus:ring-ahrc-yellow px-4 py-2">
                                 <option value="all">All Ages</option>
                             </select>
                         </div>
@@ -129,7 +141,7 @@
                         <span class="font-medium">Showing:</span> <span id="filterSummaryText"></span>
                     </div>
                 </div>
-                <button id="exportCsv" class="mb-4 bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 transition duration-300 shadow-md">Export to CSV</button>
+                <button id="exportCsv" class="mb-4 bg-ahrc-yellow text-ahrc-purple font-bold py-2 px-4 rounded-lg hover:bg-yellow-400 transition duration-300 shadow-md">Export to CSV</button>
 
                 <div class="table-responsive">
                     <table class="min-w-full bg-white border">
@@ -203,10 +215,10 @@
     const setActiveTab = (tabName) => {
         tabButtons.forEach(btn => {
             if (btn.dataset.tab === tabName) {
-                btn.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
+                btn.classList.add('text-ahrc-purple', 'border-b-2', 'border-ahrc-purple');
                 btn.classList.remove('text-gray-500', 'hover:text-gray-700');
             } else {
-                btn.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
+                btn.classList.remove('text-ahrc-purple', 'border-b-2', 'border-ahrc-purple');
                 btn.classList.add('text-gray-500', 'hover:text-gray-700');
             }
         });
@@ -333,7 +345,7 @@
                 row.innerHTML = `
                     <td class="py-3 px-4 border-b font-bold">${index + 1}</td>
                     <td class="py-3 px-4 border-b font-medium">${athlete.name}</td>
-                    <td class="py-3 px-4 border-b font-semibold text-blue-700">${athlete.fastest_time}</td>
+                    <td class="py-3 px-4 border-b font-semibold text-ahrc-purple">${athlete.fastest_time}</td>
                     <td class="py-3 px-4 border-b">${new Date(athlete.date_of_time).toLocaleDateString()}</td>
                     <td class="py-3 px-4 border-b">${athlete.location || ''}</td>
                     <td class="py-3 px-4 border-b">${athlete.gender}</td>
@@ -379,10 +391,10 @@
     filterButtons.forEach(button => {
         button.addEventListener('click', () => {
             filterButtons.forEach(btn => { 
-                btn.classList.replace('bg-blue-500', 'bg-gray-200'); 
+                btn.classList.replace('bg-ahrc-purple', 'bg-gray-200'); 
                 btn.classList.replace('text-white', 'text-gray-700'); 
             });
-            button.classList.replace('bg-gray-200', 'bg-blue-500'); 
+            button.classList.replace('bg-gray-200', 'bg-ahrc-purple'); 
             button.classList.replace('text-gray-700', 'text-white');
             activeFilter = button.dataset.filter; 
             activeAgeCategory = 'all';
@@ -402,10 +414,10 @@
         ageCategorySelect.value = 'all';
         
         filterButtons.forEach(btn => { 
-            btn.classList.replace('bg-blue-500', 'bg-gray-200'); 
+            btn.classList.replace('bg-ahrc-purple', 'bg-gray-200'); 
             btn.classList.replace('text-white', 'text-gray-700'); 
         });
-        filterButtons[0].classList.replace('bg-gray-200', 'bg-blue-500');
+        filterButtons[0].classList.replace('bg-gray-200', 'bg-ahrc-purple');
         filterButtons[0].classList.add('text-white');
         
         applyFilters();
