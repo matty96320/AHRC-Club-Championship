@@ -122,10 +122,20 @@
                     <label for="edit-athleteNumber" class="block text-sm font-medium text-gray-700">Parkrun Athlete Number (Optional)</label>
                     <input type="text" id="edit-athleteNumber" placeholder="e.g., A1234567" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                 </div>
+                
                 <div>
-                    <label for="edit-dob" class="block text-sm font-medium text-gray-700">Date of Birth</label>
-                    <input type="date" id="edit-dob" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    <label for="edit-age-category" class="block text-sm font-medium text-gray-700">Age Category</label>
+                    <select id="edit-age-category" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        <option value="Under 18">Under 18</option>
+                        <option value="18-29">18-29</option>
+                        <option value="30-39">30-39</option>
+                        <option value="40-49">40-49</option>
+                        <option value="50-59">50-59</option>
+                        <option value="60-69">60-69</option>
+                        <option value="70+">70+</option>
+                    </select>
                 </div>
+
                 <div>
                     <label for="edit-gender" class="block text-sm font-medium text-gray-700">Gender</label>
                     <select id="edit-gender" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
@@ -231,20 +241,12 @@
             const [minutes, seconds] = timeStr.split(':').map(Number);
             return (minutes * 60) + (seconds || 0);
         };
-        const calculateAgeCategory = (dobString, parkrunDateString) => {
-             const dob = new Date(dobString);
-            const parkrunDate = new Date(parkrunDateString);
-            let age = parkrunDate.getFullYear() - dob.getFullYear();
-            const m = parkrunDate.getMonth() - dob.getMonth();
-            if (m < 0 || (m === 0 && parkrunDate.getDate() < dob.getDate())) age--;
-            if (age < 18) return 'Under 18';
-            if (age >= 18 && age < 30) return '18-29';
-            if (age >= 30 && age < 40) return '30-39';
-            if (age >= 40 && age < 50) return '40-49';
-            if (age >= 50 && age < 60) return '50-59';
-            if (age >= 60 && age < 70) return '60-69';
-            return '70+';
-        };
+
+        // ###############################################
+        // ## MODIFICATION 2: Removed calculateAgeCategory ##
+        // ###############################################
+        // (Function was here, now removed as it's no longer used)
+
 
         function listenToYearData(yearString) {
             if (currentUnsubscribe) currentUnsubscribe();
@@ -288,7 +290,6 @@
             
             athletes.forEach(athlete => {
                 const row = document.createElement('tr');
-                // *** MODIFIED: Added athlete.athlete_number to the table row ***
                 row.innerHTML = `
                     <td class="py-3 px-4 border-b">${athlete.name}</td>
                     <td class="py-3 px-4 border-b">${athlete.athlete_number || 'N/A'}</td>
@@ -362,12 +363,15 @@
             }
         });
 
-        // *** MODIFIED: Added athlete_number to modal population ***
+        // #############################################
+        // ## MODIFICATION 3: Updated openEditModal function ##
+        // #############################################
         function openEditModal(data, docId) {
             document.getElementById('edit-doc-id').value = docId;
             document.getElementById('edit-fullName').value = data.name;
             document.getElementById('edit-athleteNumber').value = data.athlete_number || '';
-            document.getElementById('edit-dob').value = data.dob;
+            // document.getElementById('edit-dob').value = data.dob; // REMOVED
+            document.getElementById('edit-age-category').value = data.age_category; // ADDED
             document.getElementById('edit-gender').value = data.gender;
             document.getElementById('edit-parkrunDate').value = data.date_of_time;
             document.getElementById('edit-parkrunTime').value = data.fastest_time;
@@ -377,23 +381,25 @@
 
         cancelEditButton.addEventListener('click', () => editModal.classList.add('hidden'));
 
-        // *** MODIFIED: Added athlete_number to update data ***
+        // #################################################
+        // ## MODIFICATION 4: Updated editForm submit logic ##
+        // #################################################
         editForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const docId = document.getElementById('edit-doc-id').value;
-            const dob = document.getElementById('edit-dob').value;
+            // const dob = document.getElementById('edit-dob').value; // REMOVED
             const parkrunDate = document.getElementById('edit-parkrunDate').value;
             const parkrunTime = document.getElementById('edit-parkrunTime').value;
 
             const updatedData = {
                 name: document.getElementById('edit-fullName').value,
                 athlete_number: document.getElementById('edit-athleteNumber').value.trim(),
-                dob: dob,
+                // dob: dob, // REMOVED (no longer updating this field)
                 gender: document.getElementById('edit-gender').value,
                 date_of_time: parkrunDate,
                 fastest_time: parkrunTime,
                 time_seconds: timeToSeconds(parkrunTime),
-                age_category: calculateAgeCategory(dob, parkrunDate),
+                age_category: document.getElementById('edit-age-category').value, // CHANGED
                 location: document.getElementById('edit-location').value.trim()
             };
             
