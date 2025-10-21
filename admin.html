@@ -91,6 +91,7 @@
                 <table class="min-w-full bg-white border">
                     <thead class="bg-gray-200">
                         <tr>
+                            <th class="py-3 px-4 border-b text-left">Rank</th>
                             <th class="py-3 px-4 border-b text-left">Athlete</th>
                             <th class="py-3 px-4 border-b text-left">Athlete ID</th>
                             <th class="py-3 px-4 border-b text-left">Time</th>
@@ -172,22 +173,17 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Views
+        // ... Element selections (unchanged) ...
         const loginView = document.getElementById('login-view');
         const adminView = document.getElementById('admin-view');
         const editModal = document.getElementById('edit-modal');
-
-        // Forms and Buttons
         const loginForm = document.getElementById('login-form');
         const logoutButton = document.getElementById('logout-button');
         const editForm = document.getElementById('edit-form');
         const cancelEditButton = document.getElementById('cancel-edit');
-        
-        // Data Display
         const yearSelector = document.getElementById('yearSelectorAdmin');
         const resultsBody = document.getElementById('adminResultsBody');
         const noResultsMsg = document.getElementById('admin-no-results');
-
         const sortButtonsContainer = document.getElementById('sort-buttons-container');
         const filterButtonsContainer = document.getElementById('filter-buttons-container');
         const ageCategoryFiltersAdminContainer = document.getElementById('age-category-filters-admin');
@@ -200,7 +196,7 @@
         let activeAgeCategoryAdmin = 'all';
         let activeSortAdmin = 'time'; // 'time' or 'date'
 
-        // --- Auth Handling ---
+        // --- Auth Handling (unchanged) ---
         onAuthStateChanged(auth, user => {
             if (user) {
                 loginView.classList.add('hidden');
@@ -230,7 +226,7 @@
 
         logoutButton.addEventListener('click', () => signOut(auth));
 
-        // --- Admin Panel Logic ---
+        // --- Admin Panel Logic (unchanged) ---
         const getChampionshipYearString = (date) => {
             const year = date.getFullYear();
             const month = date.getMonth();
@@ -241,12 +237,6 @@
             const [minutes, seconds] = timeStr.split(':').map(Number);
             return (minutes * 60) + (seconds || 0);
         };
-
-        // ###############################################
-        // ## MODIFICATION 2: Removed calculateAgeCategory ##
-        // ###############################################
-        // (Function was here, now removed as it's no longer used)
-
 
         function listenToYearData(yearString) {
             if (currentUnsubscribe) currentUnsubscribe();
@@ -284,13 +274,35 @@
             updateAdminAgeCategoryButtons();
         }
         
+        // #################################################
+        // ## MODIFICATION 2: Updated renderAdminTable function ##
+        // #################################################
         function renderAdminTable(athletes) {
             resultsBody.innerHTML = '';
             noResultsMsg.classList.toggle('hidden', athletes.length > 0);
             
-            athletes.forEach(athlete => {
+            let currentRank = 0;
+            let lastTimeSeconds = -1;
+
+            athletes.forEach((athlete, index) => {
                 const row = document.createElement('tr');
+                
+                let rankToShow;
+                // Only apply tie logic if sorting by time
+                if (activeSortAdmin === 'time') {
+                    if (athlete.time_seconds !== lastTimeSeconds) {
+                        currentRank = index + 1;
+                        lastTimeSeconds = athlete.time_seconds;
+                        rankToShow = currentRank;
+                    } else {
+                        rankToShow = currentRank; // It's a tie
+                    }
+                } else {
+                    rankToShow = index + 1; // Just show row number if sorting by date
+                }
+
                 row.innerHTML = `
+                    <td class="py-3 px-4 border-b font-bold">${rankToShow}</td>
                     <td class="py-3 px-4 border-b">${athlete.name}</td>
                     <td class="py-3 px-4 border-b">${athlete.athlete_number || 'N/A'}</td>
                     <td class="py-3 px-4 border-b font-semibold">${athlete.fastest_time}</td>
@@ -307,6 +319,7 @@
             });
         }
         
+        // ... Other functions (updateAdminFilterButtons, updateAdminAgeCategoryButtons, table actions, modal logic) (unchanged) ...
         function updateAdminFilterButtons() {
             sortButtonsContainer.querySelectorAll('.sort-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.id === `sort-by-${activeSortAdmin}`);
@@ -338,7 +351,6 @@
             });
         }
 
-        // --- Table Actions (Edit/Delete) ---
         resultsBody.addEventListener('click', async (e) => {
             const docId = e.target.dataset.id;
             if (!docId) return;
@@ -363,15 +375,11 @@
             }
         });
 
-        // #############################################
-        // ## MODIFICATION 3: Updated openEditModal function ##
-        // #############################################
         function openEditModal(data, docId) {
             document.getElementById('edit-doc-id').value = docId;
             document.getElementById('edit-fullName').value = data.name;
             document.getElementById('edit-athleteNumber').value = data.athlete_number || '';
-            // document.getElementById('edit-dob').value = data.dob; // REMOVED
-            document.getElementById('edit-age-category').value = data.age_category; // ADDED
+            document.getElementById('edit-age-category').value = data.age_category; 
             document.getElementById('edit-gender').value = data.gender;
             document.getElementById('edit-parkrunDate').value = data.date_of_time;
             document.getElementById('edit-parkrunTime').value = data.fastest_time;
@@ -381,25 +389,20 @@
 
         cancelEditButton.addEventListener('click', () => editModal.classList.add('hidden'));
 
-        // #################################################
-        // ## MODIFICATION 4: Updated editForm submit logic ##
-        // #################################################
         editForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const docId = document.getElementById('edit-doc-id').value;
-            // const dob = document.getElementById('edit-dob').value; // REMOVED
             const parkrunDate = document.getElementById('edit-parkrunDate').value;
             const parkrunTime = document.getElementById('edit-parkrunTime').value;
 
             const updatedData = {
                 name: document.getElementById('edit-fullName').value,
                 athlete_number: document.getElementById('edit-athleteNumber').value.trim(),
-                // dob: dob, // REMOVED (no longer updating this field)
                 gender: document.getElementById('edit-gender').value,
                 date_of_time: parkrunDate,
                 fastest_time: parkrunTime,
                 time_seconds: timeToSeconds(parkrunTime),
-                age_category: document.getElementById('edit-age-category').value, // CHANGED
+                age_category: document.getElementById('edit-age-category').value, 
                 location: document.getElementById('edit-location').value.trim()
             };
             
@@ -413,7 +416,7 @@
             }
         });
 
-        // --- Initialization ---
+        // --- Initialization (unchanged) ---
         function initializeAdminPanel() {
             const metadataRef = doc(db, "championships", "_metadata");
             onSnapshot(metadataRef, (docSnap) => {
@@ -432,7 +435,7 @@
                     yearSelector.appendChild(option);
                 });
 
-                const initialYear = years.includes(currentSelectedYear) ? currentSelectedYear : (yearSelector.value || currentSeason);
+                const initialYear = years.includes(currentSelectedYear) ? currentSelectedYear : (yearSelector.axlue || currentSeason);
                 yearSelector.value = initialYear;
                 listenToYearData(initialYear);
             });
@@ -446,6 +449,7 @@
                 applyAdminFilters();
             });
 
+F
             filterButtonsContainer.addEventListener('click', (e) => {
                 const filterBtn = e.target.closest('.filter-btn-admin');
                 if (!filterBtn) return;
