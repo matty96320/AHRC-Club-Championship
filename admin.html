@@ -448,8 +448,7 @@
                 activeSortAdmin = sortBtn.id === 'sort-by-time' ? 'time' : 'date';
                 applyAdminFilters();
             });
-
-F
+            
             filterButtonsContainer.addEventListener('click', (e) => {
                 const filterBtn = e.target.closest('.filter-btn-admin');
                 if (!filterBtn) return;
